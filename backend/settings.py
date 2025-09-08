@@ -1,13 +1,14 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-import re
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = '10miy#k-qw-zjmu3^be$kmq3fs-u@yorahz7nl+1mao)(unhjc'
 
-DEBUG = True
+# Use environment variable for DEBUG in production
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # ALLOWED_HOSTS should include your Railway domain
 ALLOWED_HOSTS = [
@@ -18,7 +19,7 @@ ALLOWED_HOSTS = [
     '.railway.app',  # Allow all Railway domains
 ]
 
-# CORS settings - REMOVE THE DUPLICATE AT THE BOTTOM!
+# CORS settings
 CORS_ALLOWED_ORIGINS = [
     "https://issa-connect-snyk.vercel.app",
     "https://issa-connect-rje3.vercel.app",
@@ -31,11 +32,8 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.app$",
 ]
 
-# Also make sure you have these:
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False  # Keep this False for security
-
-# ... rest of your settings remain the same ...
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -82,12 +80,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration - use PostgreSQL in production, SQLite in development
+if 'DATABASE_URL' in os.environ:
+    # Production - use PostgreSQL from Railway
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Development - use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -109,7 +119,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -130,19 +142,9 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
 }
 
-# Add this to handle CSRF with different domains
+# CSRF settings
 CSRF_TRUSTED_ORIGINS = [
     'https://issaconnect-production.up.railway.app',
     'https://*.vercel.app',
     'https://*.railway.app',
 ]
-
-# For production, you might want to set DEBUG=False
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-
-# If using Railway, you might need to configure database
-if 'DATABASE_URL' in os.environ:
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-    }
