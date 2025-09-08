@@ -171,22 +171,21 @@ const Home = () => {
     };
 
     useEffect(() => {
+        console.log('Home.js using API_BASE_URL:', API_BASE_URL);
+
         const fetchUserData = async () => {
             try {
                 const token = localStorage.getItem('access_token');
-
                 if (!token) {
                     navigate('/login');
                     return;
                 }
-
                 const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
-
                 setUser(response.data);
                 await fetchContent();
             } catch (error) {
@@ -194,6 +193,8 @@ const Home = () => {
                 console.error('Error response:', error.response);
                 localStorage.clear();
                 navigate('/login');
+            } finally {
+                setLoading(false);  // ADD THIS LINE
             }
         };
 
