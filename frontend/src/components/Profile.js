@@ -25,7 +25,7 @@ const Profile = () => {
                     return;
                 }
 
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
+                const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
