@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config.js';
 import axios from 'axios';
 
 const Home = () => {
@@ -54,10 +55,10 @@ const Home = () => {
 
             // Fetch real data from Django API
             const [newsResponse, eventsResponse] = await Promise.all([
-                axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/news/`, {
+                axios.get(`${API_BASE_URL}/api/content/news/`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/events/`, {
+                axios.get(`${API_BASE_URL}/api/content/events/`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
@@ -179,7 +180,7 @@ const Home = () => {
                     return;
                 }
 
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
+                const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
