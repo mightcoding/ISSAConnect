@@ -83,24 +83,46 @@ const Login = () => {
             <p className="auth-link">
                 Don't have an account? <Link to="/register">Sign up</Link>
             </p>
-            <div className="legal-links">
-                <p className="legal-text">
+            <div style={{
+                marginTop: '24px',
+                textAlign: 'center',
+                borderTop: '1px solid #e5e7eb',
+                paddingTop: '20px'
+            }}>
+                <p style={{
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    marginBottom: '12px',
+                    lineHeight: '1.4'
+                }}>
                     By signing in, you agree to our{' '}
-                    <a href="https://docs.google.com/document/d/1fYi9pyEvt2cNHA45arvgG864dEu7LHdKQr9YrrA1MEY/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="legal-link">
+                    <a href="https://docs.google.com/document/d/1fYi9pyEvt2cNHA45arvgG864dEu7LHdKQr9YrrA1MEY/edit?usp=sharing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#3b82f6', textDecoration: 'none' }}>
                         Terms of Service
                     </a>{' '}
                     and{' '}
-                    <a href="https://docs.google.com/document/d/1Zsk-UokU3nCN2VChvyyvMSna_BnTkNAAh99Iy87hlzE/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="legal-link">
+                    <a href="https://docs.google.com/document/d/1Zsk-UokU3nCN2VChvyyvMSna_BnTkNAAh99Iy87hlzE/edit?usp=sharing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#3b82f6', textDecoration: 'none' }}>
                         Privacy Policy
                     </a>
                 </p>
-                <div className="legal-links-row">
-                    <a href="mailto:alisher.mxghtly@gmail.com" className="legal-link-small">
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap'
+                }}>
+                    <a href="mailto:alisher.mxghtly@gmail.com"
+                        style={{ fontSize: '11px', color: '#9ca3af', textDecoration: 'none' }}>
                         Contact
                     </a>
                 </div>
             </div>
-            {/* END OF LEGAL LINKS CODE */}
 
         </div>
     );
