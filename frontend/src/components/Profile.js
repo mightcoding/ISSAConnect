@@ -37,11 +37,13 @@ const Profile = () => {
                     first_name: response.data.first_name || '',
                     last_name: response.data.last_name || ''
                 });
+
+                setLoading(false); // Move this here, only after successful profile fetch
+
             } catch (error) {
+                console.error('Profile fetch failed:', error);
                 localStorage.clear();
                 navigate('/login');
-            } finally {
-                setLoading(false);
             }
         };
 
