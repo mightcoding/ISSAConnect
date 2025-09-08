@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+import re
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,34 +9,31 @@ SECRET_KEY = '10miy#k-qw-zjmu3^be$kmq3fs-u@yorahz7nl+1mao)(unhjc'
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Also add for media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
+# ALLOWED_HOSTS should include your Railway domain
 ALLOWED_HOSTS = [
     'issaconnect-production.up.railway.app',
     'localhost',
     '127.0.0.1',
+    '.vercel.app',  # Allow all Vercel domains
+    '.railway.app',  # Allow all Railway domains
 ]
 
-# settings.py
-
+# CORS settings - REMOVE THE DUPLICATE AT THE BOTTOM!
 CORS_ALLOWED_ORIGINS = [
     "https://issa-connect-snyk.vercel.app",
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
-# Or if you want to allow all subdomains of vercel.app
+# Allow all Vercel preview deployments using regex
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://\w+\.vercel\.app$",
+    r"^https://\w+\-alishermxghtly\-4217s\-projects\.vercel\.app$",  # Your specific pattern
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# ... rest of your settings remain the same ...
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -52,7 +50,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # This should be at the top!
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -130,10 +128,19 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
 }
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+# Add this to handle CSRF with different domains
+CSRF_TRUSTED_ORIGINS = [
+    'https://issaconnect-production.up.railway.app',
+    'https://*.vercel.app',
+    'https://*.railway.app',
 ]
 
-CORS_ALLOW_CREDENTIALS = True
+# For production, you might want to set DEBUG=False
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+# If using Railway, you might need to configure database
+if 'DATABASE_URL' in os.environ:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    }
