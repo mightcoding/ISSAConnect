@@ -5408,3 +5408,49 @@ body {
     justify-content: center;
   }
 }
+
+.legal-links {
+  margin-top: 24px;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+}
+
+.legal-text {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.legal-link {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.legal-link:hover {
+  text-decoration: underline;
+}
+
+.legal-links-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.legal-link-small {
+  font-size: 11px;
+  color: #9ca3af;
+  text-decoration: none;
+}
+
+.legal-link-small:hover {
+  color: #3b82f6;
+}
+
+.separator {
+  color: #d1d5db;
+  font-size: 11px;
+}
