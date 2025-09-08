@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import API_BASE_URL from 'src/config.js';
-
+import API_BASE_URL from '../config.js';
 const Login = () => {
     const [formData, setFormData] = useState({
         username: '',
