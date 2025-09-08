@@ -46,7 +46,7 @@ const Login = () => {
             console.log('About to navigate to /home');
 
             // Use React Router navigation instead of window.location
-            navigate('/home');
+            window.location.href = '/home';
         } catch (error) {
             console.error('Login error:', error);
             setError(error.response?.data?.non_field_errors?.[0] ||

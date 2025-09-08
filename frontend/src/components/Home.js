@@ -190,10 +190,10 @@ const Home = () => {
                 setUser(response.data);
                 await fetchContent();
             } catch (error) {
+                console.error('Home.js profile fetch error:', error);
+                console.error('Error response:', error.response);
                 localStorage.clear();
                 navigate('/login');
-            } finally {
-                setLoading(false);
             }
         };
 
