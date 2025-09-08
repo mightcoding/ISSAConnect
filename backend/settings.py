@@ -23,6 +23,20 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
 ]
 
+# settings.py
+
+CORS_ALLOWED_ORIGINS = [
+    "https://issa-connect-snyk.vercel.app",
+    "http://localhost:3000",
+]
+
+# Or if you want to allow all subdomains of vercel.app
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://\w+\.vercel\.app$",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
