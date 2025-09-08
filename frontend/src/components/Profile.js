@@ -13,6 +13,7 @@ const Profile = () => {
     });
     const [saveLoading, setSaveLoading] = useState(false);
     const [message, setMessage] = useState('');
+    const [userAvatar, setUserAvatar] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,7 +39,20 @@ const Profile = () => {
                     last_name: response.data.last_name || ''
                 });
 
-                setLoading(false); // Move this here, only after successful profile fetch
+                // Fetch user avatar
+                if (response.data.id) {
+                    try {
+                        const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const currentUserData = usersResponse.data.find(u => u.id === response.data.id);
+                        setUserAvatar(currentUserData?.avatar_url);
+                    } catch (avatarError) {
+                        console.log('Could not fetch avatar:', avatarError);
+                    }
+                }
+
+                setLoading(false);
 
             } catch (error) {
                 console.error('Profile fetch failed:', error);
@@ -141,12 +155,36 @@ const Profile = () => {
                             <div className="avatar-section">
                                 <div className="avatar-container">
                                     <div className="profile-avatar-large">
-                                        {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                                        {userAvatar ? (
+                                            <img
+                                                src={userAvatar}
+                                                alt={`${user?.first_name} ${user?.last_name}`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    borderRadius: '50%',
+                                                    objectFit: 'cover'
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div
+                                            style={{
+                                                display: userAvatar ? 'none' : 'flex',
+                                                width: '100%',
+                                                height: '100%',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '2rem',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                                        </div>
                                     </div>
-                                    <button className="avatar-edit-btn">
-                                        <span>📷</span>
-                                        Change Photo
-                                    </button>
                                 </div>
 
                                 <div className="profile-info">
@@ -161,20 +199,6 @@ const Profile = () => {
                             </div>
 
                             {/* Profile Stats */}
-                            <div className="profile-stats">
-                                <div className="stat-item">
-                                    <span className="stat-number">15</span>
-                                    <span className="stat-label">Articles Read</span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-number">3</span>
-                                    <span className="stat-label">Events Attended</span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-number">128</span>
-                                    <span className="stat-label">Days Active</span>
-                                </div>
-                            </div>
                         </div>
 
                         {/* Information Card */}

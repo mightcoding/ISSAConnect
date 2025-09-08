@@ -4,6 +4,7 @@ import API_BASE_URL from '../config.js';
 import axios from 'axios';
 
 const Home = () => {
+    const [userAvatar, setUserAvatar] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [news, setNews] = useState([]);
@@ -12,39 +13,27 @@ const Home = () => {
     const [activeSection, setActiveSection] = useState('news');
     const navigate = useNavigate();
 
-    // Team data
+    // Updated team data - only 2 members with more detailed info
     const teamMembers = [
         {
             id: 1,
-            name: "Alex Rodriguez",
-            role: "Lead Developer & Co-Founder",
+            name: "Alisher Kuvanbakiyev",
+            role: "Founder & Developer",
             avatar: "AR",
-            bio: "Full-stack developer with 8+ years of experience in building scalable web applications.",
-            skills: ["React", "Node.js", "Python", "AWS"]
+            bio: "Full-stack developer with 8+ years of experience building scalable web applications. Passionate about creating intuitive user experiences and robust backend systems. When not coding, Alex enjoys hiking and exploring new technologies.",
+            skills: ["React", "Node.js", "Python", "AWS", "Docker", "GraphQL"],
+            achievements: "Led development of 15+ enterprise applications",
+            contact: "alex@issaconnect.com"
         },
         {
             id: 2,
-            name: "Sarah Chen",
-            role: "UI/UX Designer & Co-Founder",
+            name: "Imangali Baimyrza",
+            role: "Co-Founder",
             avatar: "SC",
-            bio: "Creative designer passionate about crafting intuitive and beautiful user experiences.",
-            skills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping"]
-        },
-        {
-            id: 3,
-            name: "Marcus Johnson",
-            role: "Backend Engineer",
-            avatar: "MJ",
-            bio: "Backend specialist focused on building robust APIs and optimizing system performance.",
-            skills: ["Django", "PostgreSQL", "Redis", "Docker"]
-        },
-        {
-            id: 4,
-            name: "Elena Vasquez",
-            role: "Product Manager",
-            avatar: "EV",
-            bio: "Product strategist with expertise in user-centered design and agile development.",
-            skills: ["Product Strategy", "User Analytics", "Agile", "Market Research"]
+            bio: "Creative designer passionate about crafting beautiful and functional user interfaces. With a background in psychology and design, Sarah focuses on user-centered design principles that make technology accessible to everyone.",
+            skills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping", "Design Systems", "Accessibility"],
+            achievements: "Designed interfaces used by 50,000+ users daily",
+            contact: "sarah@issaconnect.com"
         }
     ];
 
@@ -187,6 +176,20 @@ const Home = () => {
                     }
                 });
                 setUser(response.data);
+
+                // Fetch user avatar from profile
+                if (response.data.id) {
+                    try {
+                        const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const currentUserData = usersResponse.data.find(u => u.id === response.data.id);
+                        setUserAvatar(currentUserData?.avatar_url);
+                    } catch (avatarError) {
+                        console.log('Could not fetch avatar:', avatarError);
+                    }
+                }
+
                 await fetchContent();
             } catch (error) {
                 console.error('Home.js profile fetch error:', error);
@@ -194,7 +197,7 @@ const Home = () => {
                 localStorage.clear();
                 navigate('/login');
             } finally {
-                setLoading(false);  // ADD THIS LINE
+                setLoading(false);
             }
         };
 
@@ -276,12 +279,15 @@ const Home = () => {
 
     return (
         <div className="home-page">
-            {/* Navigation Header */}
-            <nav className="main-navbar">
+            {/* Enhanced Navigation Header */}
+            <nav className="main-navbar enhanced-nav">
                 <div className="nav-container">
                     <div className="nav-brand">
-                        <div className="brand-logo">
-                            <div className="logo-icon">IC</div>
+                        <div className="brand-logo enhanced-logo">
+                            <div className="logo-icon">
+                                <span className="logo-text">IC</span>
+                                <div className="logo-glow"></div>
+                            </div>
                             <div className="brand-text">
                                 <h1 className="brand-title">Issa Connect</h1>
                                 <span className="brand-tagline">Professional Collaboration Platform</span>
@@ -290,7 +296,7 @@ const Home = () => {
                     </div>
 
                     <div className="nav-center">
-                        <div className="nav-links">
+                        <div className="nav-links enhanced-links">
                             <button
                                 className={`nav-link ${activeSection === 'news' ? 'active' : ''}`}
                                 onClick={() => scrollToSection('news')}
@@ -315,7 +321,7 @@ const Home = () => {
                     <div className="nav-actions">
                         {canCreateContent && (
                             <button
-                                className="nav-btn create-btn"
+                                className="nav-btn create-btn enhanced-btn"
                                 onClick={() => navigate('/create')}
                             >
                                 <span className="btn-icon">✨</span>
@@ -325,7 +331,7 @@ const Home = () => {
 
                         {isAdmin && (
                             <button
-                                className="nav-btn admin-btn"
+                                className="nav-btn admin-btn enhanced-btn"
                                 onClick={() => navigate('/admin')}
                             >
                                 <span className="btn-icon">⚡</span>
@@ -336,17 +342,23 @@ const Home = () => {
                 </div>
             </nav>
 
-            {/* Hero Section */}
-            <section className="hero-section">
+            {/* Enhanced Hero Section with Animations */}
+            <section className="hero-section enhanced-hero">
+                <div className="hero-background">
+                    <div className="floating-shape shape-1"></div>
+                    <div className="floating-shape shape-2"></div>
+                    <div className="floating-shape shape-3"></div>
+                    <div className="floating-shape shape-4"></div>
+                </div>
                 <div className="hero-container">
                     <div className="hero-content">
-                        <h2 className="hero-title">
+                        <h2 className="hero-title animated-title">
                             Welcome to Issa Connect, {user?.first_name || user?.username}
                         </h2>
-                        <p className="hero-subtitle">
+                        <p className="hero-subtitle animated-subtitle">
                             Stay connected with the latest updates, exciting events, and meet our amazing team
                         </p>
-                        <div className="hero-stats">
+                        <div className="hero-stats animated-stats">
                             <div className="stat-item">
                                 <span className="stat-number">500+</span>
                                 <span className="stat-label">Active Users</span>
@@ -357,12 +369,19 @@ const Home = () => {
                             </div>
                             <div className="stat-item">
                                 <span className="stat-number">Student Council</span>
-                                <span className="stat-label">Afffiliated with</span>
+                                <span className="stat-label">Affiliated with</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
+
+            {/* Background Decorations */}
+            <div className="page-decorations">
+                <div className="decoration-1"></div>
+                <div className="decoration-2"></div>
+                <div className="decoration-3"></div>
+            </div>
 
             {/* Main Content */}
             <main className="main-content">
@@ -475,7 +494,7 @@ const Home = () => {
                         </div>
                     </section>
 
-                    {/* Team Section */}
+                    {/* Simple Team Section - 2 Photo-focused Cards */}
                     <section id="team" className="content-section">
                         <div className="section-header">
                             <div className="section-title-group">
@@ -487,23 +506,20 @@ const Home = () => {
                             </div>
                         </div>
 
-                        <div className="team-grid">
+                        <div className="team-grid-simple">
                             {teamMembers.map((member) => (
-                                <div key={member.id} className="team-card">
-                                    <div className="team-avatar">
-                                        <span className="avatar-text">{member.avatar}</span>
+                                <div key={member.id} className="team-card-simple">
+                                    <div className="team-photo-container">
+                                        <img
+                                            src={member.image}
+                                            alt={member.name}
+                                            className="team-photo"
+                                        />
+                                        <div className="photo-overlay"></div>
                                     </div>
-                                    <div className="team-info">
-                                        <h4 className="team-name">{member.name}</h4>
-                                        <p className="team-role">{member.role}</p>
-                                        <p className="team-bio">{member.bio}</p>
-                                        <div className="team-skills">
-                                            {member.skills.map((skill, index) => (
-                                                <span key={index} className="skill-tag">
-                                                    {skill}
-                                                </span>
-                                            ))}
-                                        </div>
+                                    <div className="team-info-simple">
+                                        <h4 className="team-name-simple">{member.name}</h4>
+                                        <p className="team-role-simple">{member.role}</p>
                                     </div>
                                 </div>
                             ))}
@@ -519,7 +535,34 @@ const Home = () => {
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                 >
                     <div className="profile-avatar">
-                        {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                        {userAvatar ? (
+                            <img
+                                src={userAvatar}
+                                alt={`${user?.first_name} ${user?.last_name}`}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: '50%',
+                                    objectFit: 'cover'
+                                }}
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className="profile-initials"
+                            style={{
+                                display: userAvatar ? 'none' : 'flex',
+                                width: '100%',
+                                height: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                        </div>
                     </div>
                     <div className="profile-info">
                         <span className="profile-name">
@@ -538,7 +581,33 @@ const Home = () => {
                     <div className="profile-menu">
                         <div className="menu-header">
                             <div className="menu-avatar">
-                                {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                                {userAvatar ? (
+                                    <img
+                                        src={userAvatar}
+                                        alt={`${user?.first_name} ${user?.last_name}`}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            borderRadius: '50%',
+                                            objectFit: 'cover'
+                                        }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                    />
+                                ) : null}
+                                <div
+                                    style={{
+                                        display: userAvatar ? 'none' : 'flex',
+                                        width: '100%',
+                                        height: '100%',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                                </div>
                             </div>
                             <div className="menu-info">
                                 <span className="menu-name">{user?.first_name} {user?.last_name}</span>

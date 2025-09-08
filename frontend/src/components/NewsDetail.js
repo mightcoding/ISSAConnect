@@ -7,6 +7,8 @@ const NewsDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [article, setArticle] = useState(null);
+    const [userAvatar, setUserAvatar] = useState(null);
+    const [authorAvatar, setAuthorAvatar] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
@@ -17,7 +19,25 @@ const NewsDetail = () => {
         category: '',
         image: ''
     });
-
+    useEffect(() => {
+        if (article?.author_name && user) {
+            const fetchAuthorAvatar = async () => {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const authorData = usersResponse.data.find(u =>
+                        `${u.first_name} ${u.last_name}` === article.author_name
+                    );
+                    setAuthorAvatar(authorData?.avatar_url);
+                } catch (error) {
+                    console.log('Could not fetch author avatar:', error);
+                }
+            };
+            fetchAuthorAvatar();
+        }
+    }, [article, user]);
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -188,6 +208,27 @@ Thank you for being part of our growing community!`,
                         }
                     ];
 
+                    // Fetch user avatar
+                    if (userResponse.data.id) {
+                        try {
+                            const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            const currentUserData = usersResponse.data.find(u => u.id === userResponse.data.id);
+                            setUserAvatar(currentUserData?.avatar_url);
+
+                            // Also try to find author avatar if we have author info
+                            if (article?.author_name) {
+                                const authorData = usersResponse.data.find(u =>
+                                    `${u.first_name} ${u.last_name}` === article.author_name
+                                );
+                                setAuthorAvatar(authorData?.avatar_url);
+                            }
+                        } catch (avatarError) {
+                            console.log('Could not fetch avatars:', avatarError);
+                        }
+                    }
+
                     // Find the specific article by ID
                     const foundArticle = mockNews.find(article => article.id === parseInt(id));
 
@@ -206,7 +247,9 @@ Thank you for being part of our growing community!`,
             } catch (error) {
                 console.error('Error fetching data:', error);
                 navigate('/home');
-            } finally {
+            }
+
+            finally {
                 setLoading(false);
             }
         };
@@ -446,13 +489,39 @@ Thank you for being part of our growing community!`,
                             {/* Enhanced Author Section */}
                             <div className="article-author">
                                 <div className="author-avatar">
-                                    {(() => {
-                                        const authorName = article.author_name || 'Unknown Author';
-                                        if (typeof authorName === 'string') {
-                                            return authorName.split(' ').map(n => n[0]).join('');
-                                        }
-                                        return 'AU';
-                                    })()}
+                                    {authorAvatar ? (
+                                        <img
+                                            src={authorAvatar}
+                                            alt={article.author_name || 'Author'}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                borderRadius: '50%',
+                                                objectFit: 'cover'
+                                            }}
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling.style.display = 'flex';
+                                            }}
+                                        />
+                                    ) : null}
+                                    <div
+                                        style={{
+                                            display: authorAvatar ? 'none' : 'flex',
+                                            width: '100%',
+                                            height: '100%',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        {(() => {
+                                            const authorName = article.author_name || 'Unknown Author';
+                                            if (typeof authorName === 'string') {
+                                                return authorName.split(' ').map(n => n[0]).join('');
+                                            }
+                                            return 'AU';
+                                        })()}
+                                    </div>
                                 </div>
                                 <div className="author-info">
                                     <div className="author-details">
@@ -559,7 +628,33 @@ Thank you for being part of our growing community!`,
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                 >
                     <div className="profile-avatar">
-                        {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                        {userAvatar ? (
+                            <img
+                                src={userAvatar}
+                                alt={`${user?.first_name} ${user?.last_name}`}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: '50%',
+                                    objectFit: 'cover'
+                                }}
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            style={{
+                                display: userAvatar ? 'none' : 'flex',
+                                width: '100%',
+                                height: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                        </div>
                     </div>
                     <div className="profile-info">
                         <span className="profile-name">
@@ -578,7 +673,33 @@ Thank you for being part of our growing community!`,
                     <div className="profile-menu">
                         <div className="menu-header">
                             <div className="menu-avatar">
-                                {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                                {userAvatar ? (
+                                    <img
+                                        src={userAvatar}
+                                        alt={`${user?.first_name} ${user?.last_name}`}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            borderRadius: '50%',
+                                            objectFit: 'cover'
+                                        }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                    />
+                                ) : null}
+                                <div
+                                    style={{
+                                        display: userAvatar ? 'none' : 'flex',
+                                        width: '100%',
+                                        height: '100%',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                                </div>
                             </div>
                             <div className="menu-info">
                                 <span className="menu-name">{user?.first_name} {user?.last_name}</span>

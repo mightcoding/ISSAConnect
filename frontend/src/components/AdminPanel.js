@@ -10,6 +10,11 @@ const AdminPanel = () => {
     const [message, setMessage] = useState('');
     const [updating, setUpdating] = useState(null);
     const [apiError, setApiError] = useState(null);
+    const [avatarEdit, setAvatarEdit] = useState({
+        userId: null,
+        url: '',
+        updating: false
+    });
 
     const navigate = useNavigate();
 
@@ -53,7 +58,7 @@ const AdminPanel = () => {
 
                 // Fetch all users
                 console.log('👥 Fetching users list...');
-                const usersUrl = `${API_BASE_URL}/api/auth/admin/users/`;
+                const usersUrl = `${API_BASE_URL}/api/content/admin/users/`;
                 console.log('📍 Users API URL:', usersUrl);
 
                 try {
@@ -95,6 +100,7 @@ const AdminPanel = () => {
                             email: 'john@example.com',
                             is_staff: false,
                             can_create_content: false,
+                            avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
                             date_joined: '2024-01-10T10:00:00Z'
                         },
                         {
@@ -105,6 +111,7 @@ const AdminPanel = () => {
                             email: 'jane@example.com',
                             is_staff: false,
                             can_create_content: true,
+                            avatar_url: null,
                             date_joined: '2024-01-08T14:30:00Z'
                         },
                         {
@@ -115,6 +122,7 @@ const AdminPanel = () => {
                             email: 'admin@example.com',
                             is_staff: true,
                             can_create_content: true,
+                            avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
                             date_joined: '2024-01-01T09:00:00Z'
                         }
                     ]);
@@ -138,7 +146,7 @@ const AdminPanel = () => {
 
         try {
             const token = localStorage.getItem('access_token');
-            const updateUrl = `${API_BASE_URL}/api/auth/admin/users/${userId}/`;
+            const updateUrl = `${API_BASE_URL}/api/content/admin/users/${userId}/`;
 
             console.log('🔄 Updating user permissions:', {
                 userId,
@@ -182,12 +190,124 @@ const AdminPanel = () => {
         }
     };
 
+    const startAvatarEdit = (userId, currentUrl = '') => {
+        console.log('🖼️ startAvatarEdit called with:', { userId, currentUrl });
+        setAvatarEdit({
+            userId,
+            url: currentUrl || '',
+            updating: false
+        });
+        console.log('✅ Avatar edit state set');
+    };
+
+    const cancelAvatarEdit = () => {
+        console.log('❌ cancelAvatarEdit called');
+        setAvatarEdit({
+            userId: null,
+            url: '',
+            updating: false
+        });
+    };
+
+    const updateAvatar = async () => {
+        if (!avatarEdit.userId || !avatarEdit.url.trim()) {
+            setMessage('Please enter a valid avatar URL');
+            return;
+        }
+
+        setAvatarEdit(prev => ({ ...prev, updating: true }));
+        setMessage('');
+
+        try {
+            const token = localStorage.getItem('access_token');
+
+            const response = await axios.patch(
+                `${API_BASE_URL}/api/content/admin/users/${avatarEdit.userId}/avatar/`,
+                { avatar_url: avatarEdit.url.trim() },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            // Update user in local state
+            setUsers(users.map(u =>
+                u.id === avatarEdit.userId
+                    ? { ...u, avatar_url: response.data.avatar_url }
+                    : u
+            ));
+
+            setMessage('Avatar updated successfully!');
+            cancelAvatarEdit();
+
+        } catch (error) {
+            console.error('❌ Avatar update failed:', error.response?.data || error.message);
+            setMessage(`Failed to update avatar: ${error.response?.data?.error || error.message}`);
+        } finally {
+            setAvatarEdit(prev => ({ ...prev, updating: false }));
+        }
+    };
+
+    const deleteAvatar = async (userId) => {
+        if (!window.confirm('Are you sure you want to delete this user\'s avatar?')) return;
+
+        try {
+            const token = localStorage.getItem('access_token');
+
+            await axios.delete(
+                `${API_BASE_URL}/api/content/admin/users/${userId}/avatar/delete/`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    }
+                }
+            );
+
+            // Update user in local state
+            setUsers(users.map(u =>
+                u.id === userId
+                    ? { ...u, avatar_url: null }
+                    : u
+            ));
+
+            setMessage('Avatar deleted successfully!');
+
+        } catch (error) {
+            console.error('❌ Avatar delete failed:', error.response?.data || error.message);
+            setMessage(`Failed to delete avatar: ${error.response?.data?.error || error.message}`);
+        }
+    };
+
+    const getUserInitials = (firstName, lastName) => {
+        return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase() || '?';
+    };
+
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
+    };
+
+    const isValidImageUrl = (url) => {
+        try {
+            new URL(url);
+            return url.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i) ||
+                url.includes('unsplash.com') ||
+                url.includes('imgur.com') ||
+                url.includes('gravatar.com') ||
+                url.includes('cloudinary.com');
+        } catch {
+            return false;
+        }
+    };
+
+    const handleAvatarClick = (userId, currentUrl) => {
+        console.log('🖱️ Avatar clicked! User ID:', userId, 'Current URL:', currentUrl);
+        startAvatarEdit(userId, currentUrl);
     };
 
     if (loading) {
@@ -215,7 +335,7 @@ const AdminPanel = () => {
                     <div className="admin-header">
                         <h2 className="admin-title">User Management</h2>
                         <p className="admin-subtitle">
-                            Manage user permissions and content creation rights
+                            Manage user permissions, avatars, and content creation rights
                         </p>
                     </div>
 
@@ -235,14 +355,121 @@ const AdminPanel = () => {
                         </div>
                     )}
 
-                    {/* Debug Info (remove in production) */}
-                    <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f0f0f0', fontSize: '12px' }}>
-                        <strong>Debug Info:</strong><br />
-                        API Base URL: {API_BASE_URL}<br />
-                        Current User: {user?.username} (Staff: {user?.is_staff ? 'Yes' : 'No'}, Super: {user?.is_superuser ? 'Yes' : 'No'})<br />
-                        Users Count: {users.length}<br />
-                        API Status: {apiError ? `Error ${apiError.status}` : 'Working'}
+                    {/* Debug info */}
+                    <div style={{
+                        margin: '20px',
+                        padding: '10px',
+                        backgroundColor: '#f0f0f0',
+                        fontSize: '12px',
+                        border: '1px solid #ccc'
+                    }}>
+                        <strong>Avatar Edit Debug:</strong><br />
+                        Avatar Edit User ID: {avatarEdit.userId || 'None'}<br />
+                        Avatar Edit URL: {avatarEdit.url || 'Empty'}<br />
+                        Modal should be visible: {avatarEdit.userId ? 'YES' : 'NO'}
                     </div>
+
+                    {/* Avatar Edit Modal */}
+                    {avatarEdit.userId && (
+                        <div style={{
+                            margin: '20px',
+                            padding: '20px',
+                            backgroundColor: '#e3f2fd',
+                            border: '2px solid #2196f3',
+                            borderRadius: '8px'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                <h3 style={{ margin: 0, color: '#1565c0' }}>Update Avatar</h3>
+                                <button
+                                    onClick={cancelAvatarEdit}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        fontSize: '20px',
+                                        cursor: 'pointer',
+                                        color: '#1565c0'
+                                    }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#1565c0' }}>
+                                        Avatar Image URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={avatarEdit.url}
+                                        onChange={(e) => setAvatarEdit(prev => ({ ...prev, url: e.target.value }))}
+                                        placeholder="https://example.com/avatar.jpg"
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px',
+                                            border: '1px solid #2196f3',
+                                            borderRadius: '4px'
+                                        }}
+                                    />
+                                    <p style={{ fontSize: '12px', color: '#1565c0', margin: '5px 0 0 0' }}>
+                                        Supported: JPG, PNG, GIF, WebP, or popular image hosting sites
+                                    </p>
+                                </div>
+
+                                {avatarEdit.url && isValidImageUrl(avatarEdit.url) && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <img
+                                            src={avatarEdit.url}
+                                            alt="Avatar preview"
+                                            style={{
+                                                width: '60px',
+                                                height: '60px',
+                                                borderRadius: '50%',
+                                                objectFit: 'cover',
+                                                border: '2px solid #2196f3'
+                                            }}
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                        <div style={{ color: '#1565c0' }}>
+                                            Preview of new avatar
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        onClick={updateAvatar}
+                                        disabled={avatarEdit.updating || !avatarEdit.url.trim()}
+                                        style={{
+                                            backgroundColor: '#2196f3',
+                                            color: 'white',
+                                            padding: '8px 16px',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {avatarEdit.updating ? 'Updating...' : 'Update Avatar'}
+                                    </button>
+                                    <button
+                                        onClick={cancelAvatarEdit}
+                                        style={{
+                                            backgroundColor: '#ccc',
+                                            color: '#333',
+                                            padding: '8px 16px',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Users Table */}
                     <div className="users-table-container">
@@ -262,9 +489,68 @@ const AdminPanel = () => {
                                     <tr key={userData.id} className="user-row">
                                         <td>
                                             <div className="user-info">
-                                                <div className="user-avatar">
-                                                    {userData.first_name?.charAt(0)}{userData.last_name?.charAt(0)}
+                                                <div
+                                                    style={{
+                                                        position: 'relative',
+                                                        display: 'inline-block',
+                                                        cursor: 'pointer',
+                                                        border: '2px solid red' // Debug border
+                                                    }}
+                                                    onClick={() => handleAvatarClick(userData.id, userData.avatar_url)}
+                                                >
+                                                    {userData.avatar_url ? (
+                                                        <img
+                                                            src={userData.avatar_url}
+                                                            alt={`${userData.first_name} ${userData.last_name}`}
+                                                            style={{
+                                                                width: '40px',
+                                                                height: '40px',
+                                                                borderRadius: '50%',
+                                                                objectFit: 'cover',
+                                                                display: 'block'
+                                                            }}
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                e.target.nextSibling.style.display = 'flex';
+                                                            }}
+                                                        />
+                                                    ) : null}
+
+                                                    <div
+                                                        style={{
+                                                            width: '40px',
+                                                            height: '40px',
+                                                            backgroundColor: '#3b82f6',
+                                                            borderRadius: '50%',
+                                                            display: userData.avatar_url ? 'none' : 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: 'white',
+                                                            fontWeight: '600',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        {getUserInitials(userData.first_name, userData.last_name)}
+                                                    </div>
+
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        right: 0,
+                                                        bottom: 0,
+                                                        backgroundColor: 'rgba(0,0,0,0.5)',
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        opacity: 0,
+                                                        transition: 'opacity 0.2s'
+                                                    }}>
+                                                        <span style={{ color: 'white', fontSize: '12px' }}>✏️</span>
+                                                    </div>
                                                 </div>
+
                                                 <div className="user-details">
                                                     <div className="user-name">
                                                         {userData.first_name} {userData.last_name}
@@ -286,16 +572,35 @@ const AdminPanel = () => {
                                         </td>
                                         <td>{formatDate(userData.date_joined)}</td>
                                         <td>
-                                            {!userData.is_staff && (
-                                                <button
-                                                    className={`permission-btn ${userData.can_create_content ? 'revoke' : 'grant'}`}
-                                                    onClick={() => toggleContentPermission(userData.id, userData.can_create_content)}
-                                                    disabled={updating === userData.id}
-                                                >
-                                                    {updating === userData.id ? 'Updating...' :
-                                                        userData.can_create_content ? 'Revoke' : 'Grant'}
-                                                </button>
-                                            )}
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                {!userData.is_staff && (
+                                                    <button
+                                                        className={`permission-btn ${userData.can_create_content ? 'revoke' : 'grant'}`}
+                                                        onClick={() => toggleContentPermission(userData.id, userData.can_create_content)}
+                                                        disabled={updating === userData.id}
+                                                    >
+                                                        {updating === userData.id ? 'Updating...' :
+                                                            userData.can_create_content ? 'Revoke' : 'Grant'}
+                                                    </button>
+                                                )}
+
+                                                {userData.avatar_url && (
+                                                    <button
+                                                        onClick={() => deleteAvatar(userData.id)}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            border: '1px solid #ef4444',
+                                                            borderRadius: '4px',
+                                                            fontSize: '12px',
+                                                            backgroundColor: '#fee2e2',
+                                                            color: '#7f1d1d',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        Delete Avatar
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
