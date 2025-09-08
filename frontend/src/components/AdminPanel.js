@@ -9,6 +9,7 @@ const AdminPanel = () => {
     const [users, setUsers] = useState([]);
     const [message, setMessage] = useState('');
     const [updating, setUpdating] = useState(null);
+    const [apiError, setApiError] = useState(null);
 
     const navigate = useNavigate();
 
@@ -16,13 +17,17 @@ const AdminPanel = () => {
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem('access_token');
+                console.log('🔑 Token available:', !!token);
+                console.log('🌐 API Base URL:', API_BASE_URL);
 
                 if (!token) {
+                    console.log('❌ No token found, redirecting to login');
                     navigate('/login');
                     return;
                 }
 
                 // Get current user
+                console.log('👤 Fetching user profile...');
                 const userResponse = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -30,25 +35,57 @@ const AdminPanel = () => {
                     }
                 });
 
+                console.log('✅ Profile response:', userResponse.data);
                 setUser(userResponse.data);
 
                 // Check if user is admin
-                if (!userResponse.data.is_superuser && !userResponse.data.is_staff) {
+                const isAdmin = userResponse.data.is_superuser || userResponse.data.is_staff;
+                console.log('👨‍💼 Is admin?', isAdmin, {
+                    is_staff: userResponse.data.is_staff,
+                    is_superuser: userResponse.data.is_superuser
+                });
+
+                if (!isAdmin) {
+                    console.log('❌ User is not admin, redirecting to home');
                     navigate('/home');
                     return;
                 }
 
-                // Fetch all users - handle this error separately
+                // Fetch all users
+                console.log('👥 Fetching users list...');
+                const usersUrl = `${API_BASE_URL}/api/auth/admin/users/`;
+                console.log('📍 Users API URL:', usersUrl);
+
                 try {
-                    const usersResponse = await axios.get(`${API_BASE_URL}/api/auth/admin/users/`, {
+                    const usersResponse = await axios.get(usersUrl, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         }
                     });
+
+                    console.log('✅ Users API response:', usersResponse.data);
+                    console.log('📊 Number of users received:', usersResponse.data.length);
+
                     setUsers(usersResponse.data);
+                    setApiError(null);
+
                 } catch (error) {
-                    console.log('Admin users API not available, using mock data');
+                    console.error('❌ Users API Error Details:', {
+                        status: error.response?.status,
+                        statusText: error.response?.statusText,
+                        data: error.response?.data,
+                        message: error.message,
+                        url: usersUrl
+                    });
+
+                    setApiError({
+                        status: error.response?.status,
+                        message: error.response?.data?.detail || error.message
+                    });
+
+                    // Set mock data for testing
+                    console.log('🔄 Using mock data for development');
                     setUsers([
                         {
                             id: 1,
@@ -83,10 +120,10 @@ const AdminPanel = () => {
                     ]);
                 }
 
-                setLoading(false); // Move this here, only after successful profile fetch
+                setLoading(false);
 
             } catch (error) {
-                console.error('Profile fetch failed:', error);
+                console.error('❌ Profile fetch failed:', error);
                 localStorage.clear();
                 navigate('/login');
             }
@@ -101,7 +138,17 @@ const AdminPanel = () => {
 
         try {
             const token = localStorage.getItem('access_token');
-            await axios.patch(`${API_BASE_URL}/api/auth/admin/users/${userId}/`, { can_create_content: !currentStatus },
+            const updateUrl = `${API_BASE_URL}/api/auth/admin/users/${userId}/`;
+
+            console.log('🔄 Updating user permissions:', {
+                userId,
+                currentStatus,
+                newStatus: !currentStatus,
+                url: updateUrl
+            });
+
+            await axios.patch(updateUrl,
+                { can_create_content: !currentStatus },
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -118,14 +165,18 @@ const AdminPanel = () => {
             ));
 
             setMessage('User permissions updated successfully!');
+            console.log('✅ Permission updated successfully');
+
         } catch (error) {
-            // For demo purposes, still update the UI
+            console.error('❌ Permission update failed:', error.response?.data || error.message);
+
+            // Still update UI for demo purposes
             setUsers(users.map(u =>
                 u.id === userId
                     ? { ...u, can_create_content: !currentStatus }
                     : u
             ));
-            setMessage('User permissions updated successfully!');
+            setMessage('User permissions updated successfully! (Demo mode)');
         } finally {
             setUpdating(null);
         }
@@ -168,12 +219,30 @@ const AdminPanel = () => {
                         </p>
                     </div>
 
-                    {/* Message */}
+                    {/* API Error Display */}
+                    {apiError && (
+                        <div className="message error">
+                            API Error {apiError.status}: {apiError.message}
+                            <br />
+                            <small>Using mock data for demonstration</small>
+                        </div>
+                    )}
+
+                    {/* Success Message */}
                     {message && (
                         <div className={`message ${message.includes('success') ? 'success' : 'error'}`}>
                             {message}
                         </div>
                     )}
+
+                    {/* Debug Info (remove in production) */}
+                    <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f0f0f0', fontSize: '12px' }}>
+                        <strong>Debug Info:</strong><br />
+                        API Base URL: {API_BASE_URL}<br />
+                        Current User: {user?.username} (Staff: {user?.is_staff ? 'Yes' : 'No'}, Super: {user?.is_superuser ? 'Yes' : 'No'})<br />
+                        Users Count: {users.length}<br />
+                        API Status: {apiError ? `Error ${apiError.status}` : 'Working'}
+                    </div>
 
                     {/* Users Table */}
                     <div className="users-table-container">
