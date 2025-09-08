@@ -29,6 +29,8 @@ const Login = () => {
                     ? 'https://issaconnect-production.up.railway.app'
                     : 'http://localhost:8000');
 
+            const response = await axios.post(`${API_BASE_URL}/api/auth/login/`, formData);
+
             // Save tokens to localStorage
             localStorage.setItem('access_token', response.data.tokens.access);
             localStorage.setItem('refresh_token', response.data.tokens.refresh);
@@ -36,7 +38,6 @@ const Login = () => {
 
             // Force page reload and redirect to home
             window.location.href = '/home';
-
         } catch (error) {
             setError(error.response?.data?.non_field_errors?.[0] ||
                 error.response?.data?.detail ||
