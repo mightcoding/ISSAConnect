@@ -28,7 +28,7 @@ const Register = () => {
         setError('');
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/auth/register/', formData);
+            const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/register/`, formData);
 
             localStorage.setItem('access_token', response.data.tokens.access);
             localStorage.setItem('refresh_token', response.data.tokens.refresh);

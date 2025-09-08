@@ -24,7 +24,7 @@ const Login = () => {
         setError('');
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/auth/login/', formData);
+            const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/login/`, formData);
 
             // Save tokens to localStorage
             localStorage.setItem('access_token', response.data.tokens.access);
