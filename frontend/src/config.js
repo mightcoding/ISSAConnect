@@ -7,7 +7,7 @@ const ON_VERCEL = IS_BROWSER && window.location.hostname.endsWith('vercel.app');
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const PROD_DEFAULT = 'https://issaconnect-production.up.railway.app';
-const DEV_DEFAULT = 'http://127.0.0.1:8080';
+const DEV_DEFAULT = 'http://127.0.0.1:8000';  // ✅ FIXED: Changed from 8080 to 8000
 
 // Determine API URL
 let API_BASE_URL;
@@ -24,5 +24,7 @@ if (ENV_URL) {
 
 // Remove trailing slash if present
 API_BASE_URL = API_BASE_URL.replace(/\/$/, '');
+
+console.log('🌐 API_BASE_URL:', API_BASE_URL); // Add this for debugging
 
 export default API_BASE_URL;
