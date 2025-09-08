@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config.js';
 
 const EventDetail = () => {
     const { id } = useParams();
@@ -23,14 +24,14 @@ const EventDetail = () => {
                 const token = localStorage.getItem('access_token');
 
                 // Get user data
-                const userResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
+                const userResponse = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setUser(userResponse.data);
 
                 // Fetch specific event from Django API
                 try {
-                    const eventResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/events/${id}/`, {
+                    const eventResponse = await axios.get(`${API_BASE_URL}/api/content/events/${id}/`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
 
@@ -141,7 +142,7 @@ Connect with professionals from various industries, share experiences, and build
         try {
             const token = localStorage.getItem('access_token');
 
-            const response = await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/events/${id}/`, editForm, {
+            const response = await axios.put(`${API_BASE_URL}/api/content/events/${id}/`, editForm, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -162,7 +163,7 @@ Connect with professionals from various industries, share experiences, and build
             try {
                 const token = localStorage.getItem('access_token');
 
-                await axios.delete(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/events/${id}/`, {
+                await axios.delete(`${API_BASE_URL}/api/content/events/${id}/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

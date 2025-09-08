@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config.js';
 
 const CreateContent = () => {
     const [user, setUser] = useState(null);
@@ -37,7 +38,7 @@ const CreateContent = () => {
                     return;
                 }
 
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
+                const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -71,7 +72,7 @@ const CreateContent = () => {
             const token = localStorage.getItem('access_token');
 
             // Submit to Django API
-            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/news/`, newsForm, {
+            await axios.post(`${API_BASE_URL}/api/content/news/`, newsForm, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -105,7 +106,7 @@ const CreateContent = () => {
             const token = localStorage.getItem('access_token');
 
             // Submit to Django API
-            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/events/`, eventForm, {
+            await axios.post(`${API_BASE_URL}/api/content/events/`, eventForm, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

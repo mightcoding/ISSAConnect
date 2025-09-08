@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config.js';
 
 const NewsDetail = () => {
     const { id } = useParams();
@@ -23,14 +24,14 @@ const NewsDetail = () => {
                 const token = localStorage.getItem('access_token');
 
                 // Get user data
-                const userResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
+                const userResponse = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setUser(userResponse.data);
 
                 // Fetch specific article from Django API
                 try {
-                    const articleResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/news/${id}/`, {
+                    const articleResponse = await axios.get(`${API_BASE_URL}/api/content/news/${id}/`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
 
@@ -221,7 +222,7 @@ Thank you for being part of our growing community!`,
         try {
             const token = localStorage.getItem('access_token');
 
-            const response = await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/news/${id}/`, editForm, {
+            const response = await axios.put(`${API_BASE_URL}/api/content/news/${id}/`, editForm, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -242,7 +243,7 @@ Thank you for being part of our growing community!`,
             try {
                 const token = localStorage.getItem('access_token');
 
-                await axios.delete(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/news/${id}/`, {
+                await axios.delete(`${API_BASE_URL}/api/content/news/${id}/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config.js';
 
 const AdminPanel = () => {
     const [user, setUser] = useState(null);
@@ -22,7 +23,7 @@ const AdminPanel = () => {
                 }
 
                 // Get current user
-                const userResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
+                const userResponse = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -39,7 +40,7 @@ const AdminPanel = () => {
 
                 // Fetch all users
                 try {
-                    const usersResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/admin/users/`, {
+                    const usersResponse = await axios.get(`${API_BASE_URL}/api/admin/users/`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
@@ -98,7 +99,7 @@ const AdminPanel = () => {
 
         try {
             const token = localStorage.getItem('access_token');
-            await axios.patch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/admin/users/${userId}/`,
+            await axios.patch(`${API_BASE_URL}/api/admin/users/${userId}/`,
                 { can_create_content: !currentStatus },
                 {
                     headers: {
