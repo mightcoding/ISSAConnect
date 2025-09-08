@@ -21,17 +21,19 @@ ALLOWED_HOSTS = [
 # CORS settings - REMOVE THE DUPLICATE AT THE BOTTOM!
 CORS_ALLOWED_ORIGINS = [
     "https://issa-connect-snyk.vercel.app",
+    "https://issa-connect-rje3.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
 # Allow all Vercel preview deployments using regex
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://\w+\.vercel\.app$",
-    r"^https://\w+\-alishermxghtly\-4217s\-projects\.vercel\.app$",  # Your specific pattern
+    r"^https://.*\.vercel\.app$",
 ]
 
+# Also make sure you have these:
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False  # Keep this False for security
 
 # ... rest of your settings remain the same ...
 
