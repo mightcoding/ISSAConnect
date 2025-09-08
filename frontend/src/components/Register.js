@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -27,18 +28,29 @@ const Register = () => {
         setLoading(true);
         setError('');
 
+        // Client-side validation
+        if (formData.password !== formData.password_confirm) {
+            setError('Passwords do not match');
+            setLoading(false);
+            return;
+        }
+
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/register/`, formData);
+            const response = await axios.post(`${API_BASE_URL}/api/auth/register/`, formData);
 
             localStorage.setItem('access_token', response.data.tokens.access);
             localStorage.setItem('refresh_token', response.data.tokens.refresh);
             localStorage.setItem('user_data', JSON.stringify(response.data.user));
 
-            // Force page reload and redirect to home
-            window.location.href = '/home';
+            // Set default authorization header for future requests
+            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+
+            // Use React Router navigation
+            navigate('/home');
         } catch (error) {
             const errorMsg = error.response?.data?.password?.[0] ||
                 error.response?.data?.username?.[0] ||
+                error.response?.data?.email?.[0] ||
                 error.response?.data?.non_field_errors?.[0] ||
                 'Registration failed';
             setError(errorMsg);
