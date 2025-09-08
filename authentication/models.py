@@ -6,9 +6,18 @@ from django.dispatch import receiver
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     can_create_content = models.BooleanField(default=False)
+    avatar_url = models.URLField(
+        blank=True, 
+        null=True,
+        help_text="URL of the user's avatar image"
+    )
     
     def __str__(self):
         return f"{self.user.username} Profile"
+    
+    def get_avatar_url(self):
+        """Get avatar URL or return None"""
+        return self.avatar_url if self.avatar_url else None
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
