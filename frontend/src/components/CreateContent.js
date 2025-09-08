@@ -37,7 +37,7 @@ const CreateContent = () => {
                     return;
                 }
 
-                const response = await axios.get('http://127.0.0.1:8000/api/auth/profile/', {
+                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -71,7 +71,7 @@ const CreateContent = () => {
             const token = localStorage.getItem('access_token');
 
             // Submit to Django API
-            await axios.post('http://127.0.0.1:8000/api/content/news/', newsForm, {
+            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/news/`, newsForm, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -105,7 +105,7 @@ const CreateContent = () => {
             const token = localStorage.getItem('access_token');
 
             // Submit to Django API
-            await axios.post('http://127.0.0.1:8000/api/content/events/', eventForm, {
+            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/events/`, eventForm, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

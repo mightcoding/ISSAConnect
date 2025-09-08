@@ -54,10 +54,10 @@ const Home = () => {
 
             // Fetch real data from Django API
             const [newsResponse, eventsResponse] = await Promise.all([
-                axios.get('http://127.0.0.1:8000/api/content/news/', {
+                axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/news/`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                axios.get('http://127.0.0.1:8000/api/content/events/', {
+                axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/content/events/`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
@@ -179,7 +179,7 @@ const Home = () => {
                     return;
                 }
 
-                const response = await axios.get('http://127.0.0.1:8000/api/auth/profile/', {
+                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/profile/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
