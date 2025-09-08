@@ -38,7 +38,7 @@ const AdminPanel = () => {
                     return;
                 }
 
-                // Fetch all users
+                // Fetch all users - handle this error separately
                 try {
                     const usersResponse = await axios.get(`${API_BASE_URL}/api/admin/users/`, {
                         headers: {
@@ -48,7 +48,7 @@ const AdminPanel = () => {
                     });
                     setUsers(usersResponse.data);
                 } catch (error) {
-                    // Mock data for demonstration
+                    console.log('Admin users API not available, using mock data');
                     setUsers([
                         {
                             id: 1,
@@ -82,11 +82,13 @@ const AdminPanel = () => {
                         }
                     ]);
                 }
+
+                setLoading(false); // Move this here, only after successful profile fetch
+
             } catch (error) {
+                console.error('Profile fetch failed:', error);
                 localStorage.clear();
                 navigate('/login');
-            } finally {
-                setLoading(false);
             }
         };
 
