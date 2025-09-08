@@ -24,7 +24,10 @@ const Login = () => {
         setError('');
 
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/login/`, formData);
+            const API_BASE_URL = process.env.REACT_APP_API_URL ||
+                (process.env.NODE_ENV === 'production'
+                    ? 'https://issaconnect-production.up.railway.app'
+                    : 'http://localhost:8000');
 
             // Save tokens to localStorage
             localStorage.setItem('access_token', response.data.tokens.access);
