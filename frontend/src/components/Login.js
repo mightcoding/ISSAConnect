@@ -27,15 +27,12 @@ const Login = () => {
         try {
             const response = await axios.post(`${API_BASE_URL}/api/auth/login/`, formData);
 
-            // Save tokens to localStorage
             localStorage.setItem('access_token', response.data.tokens.access);
             localStorage.setItem('refresh_token', response.data.tokens.refresh);
             localStorage.setItem('user_data', JSON.stringify(response.data.user));
 
-            // Set default authorization header for future requests
             axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
 
-            // Add a small delay before redirect
             setTimeout(() => {
                 window.location.href = '/home';
             }, 100);
@@ -123,7 +120,6 @@ const Login = () => {
                     </a>
                 </div>
             </div>
-
         </div>
     );
 };
