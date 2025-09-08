@@ -40,7 +40,7 @@ const AdminPanel = () => {
 
                 // Fetch all users - handle this error separately
                 try {
-                    const usersResponse = await axios.get(`${API_BASE_URL}/api/admin/users/`, {
+                    const usersResponse = await axios.get(`${API_BASE_URL}/api/auth/admin/users/`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
@@ -101,8 +101,7 @@ const AdminPanel = () => {
 
         try {
             const token = localStorage.getItem('access_token');
-            await axios.patch(`${API_BASE_URL}/api/admin/users/${userId}/`,
-                { can_create_content: !currentStatus },
+            await axios.patch(`${API_BASE_URL}/api/auth/admin/users/${userId}/`, { can_create_content: !currentStatus },
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
