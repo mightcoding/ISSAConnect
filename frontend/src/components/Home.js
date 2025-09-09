@@ -565,6 +565,7 @@ const Home = () => {
                     </section>
 
                     {/* Team Section */}
+                    {/* Team Section */}
                     <section id="team" className="content-section">
                         <div className="section-header">
                             <div className="section-title-group">
@@ -576,11 +577,11 @@ const Home = () => {
 
                         <div style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                            gap: '24px', // Reduced from 40px to bring cards closer
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                            gap: '20px', // Reduced further
                             marginTop: '40px',
                             justifyItems: 'center',
-                            maxWidth: '900px', // Limit total width to keep cards closer
+                            maxWidth: '800px', // Smaller container
                             margin: '40px auto 0'
                         }}>
                             {TEAM_MEMBERS.map((member) => (
@@ -588,35 +589,35 @@ const Home = () => {
                                     key={member.id}
                                     style={{
                                         background: 'white',
-                                        borderRadius: '28px', // Scaled up from 24px
-                                        padding: '68px', // Scaled up from 40px (40 * 1.7)
+                                        borderRadius: '20px', // Reduced from 28px
+                                        padding: '50px', // Reduced from 68px
                                         textAlign: 'center',
                                         border: '1px solid #e5e7eb',
                                         transition: 'all 0.3s ease',
-                                        boxShadow: '0 6px 10px rgba(0, 0, 0, 0.1)', // Slightly larger shadow
+                                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                                         width: '100%',
-                                        maxWidth: '480px', // Scaled up from 400px
+                                        maxWidth: '380px', // Reduced from 480px
                                         cursor: 'pointer'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-8px)'; // Increased from -6px
-                                        e.currentTarget.style.boxShadow = '0 16px 40px rgba(0, 0, 0, 0.15)';
+                                        e.currentTarget.style.transform = 'translateY(-6px)';
+                                        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.15)';
                                         e.currentTarget.style.borderColor = '#3b82f6';
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.1)';
+                                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
                                         e.currentTarget.style.borderColor = '#e5e7eb';
                                     }}
                                 >
                                     <div style={{
                                         position: 'relative',
-                                        width: '255px', // Scaled up from 150px (150 * 1.7)
-                                        height: '255px',
-                                        margin: '0 auto 40px', // Scaled up from 24px
+                                        width: '200px', // Reduced from 255px
+                                        height: '200px',
+                                        margin: '0 auto 30px', // Reduced from 40px
                                         borderRadius: '50%',
                                         overflow: 'hidden',
-                                        border: '6px solid #e5e7eb', // Scaled up from 4px
+                                        border: '4px solid #e5e7eb', // Reduced from 6px
                                         transition: 'border-color 0.3s ease'
                                     }}>
                                         {member.photo ? (
@@ -650,10 +651,10 @@ const Home = () => {
                                                 display: member.photo ? 'none' : 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                fontSize: '82px', // Scaled up from 48px (48 * 1.7)
+                                                fontSize: '60px', // Reduced from 82px
                                                 fontWeight: '600',
                                                 color: 'white',
-                                                textShadow: '0 3px 6px rgba(0, 0, 0, 0.2)',
+                                                textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                                 position: 'absolute',
                                                 top: '0',
                                                 left: '0',
@@ -676,16 +677,16 @@ const Home = () => {
                                     </div>
                                     <div>
                                         <h4 style={{
-                                            fontSize: '41px', // Scaled up from 24px (24 * 1.7)
+                                            fontSize: '28px', // Reduced from 41px
                                             fontWeight: '700',
                                             color: '#111827',
-                                            margin: '0 0 20px 0', // Scaled up from 12px
+                                            margin: '0 0 16px 0', // Reduced from 20px
                                             lineHeight: '1.2'
                                         }}>
                                             {member.name}
                                         </h4>
                                         <p style={{
-                                            fontSize: '27px', // Scaled up from 16px (16 * 1.7)
+                                            fontSize: '18px', // Reduced from 27px
                                             color: '#6b7280',
                                             margin: '0',
                                             lineHeight: '1.4',
