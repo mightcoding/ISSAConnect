@@ -347,7 +347,7 @@ const Home = () => {
         return (
             <div className="loading-container">
                 <div className="loading-spinner"></div>
-                <p>Loading Issa Connect...</p>
+                <p>Loading ISSA Connect...</p>
             </div>
         );
     }
@@ -364,8 +364,8 @@ const Home = () => {
                                 <div className="logo-glow"></div>
                             </div>
                             <div className="brand-text">
-                                <h1 className="brand-title">Issa Connect</h1>
-                                <span className="brand-tagline">Professional Collaboration Platform</span>
+                                <h1 className="brand-title">ISSAConnect</h1>
+                                <span className="brand-tagline">School Collaboration Platform</span>
                             </div>
                         </div>
                     </div>
