@@ -28,7 +28,7 @@ const Home = () => {
         {
             id: 2,
             name: "Imangali Baimyrza",
-            role: "Co-Founder",
+            role: "Founder",
             avatar: "SC",
             bio: "Creative designer passionate about crafting beautiful and functional user interfaces. With a background in psychology and design, Sarah focuses on user-centered design principles that make technology accessible to everyone.",
             skills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping", "Design Systems", "Accessibility"],
