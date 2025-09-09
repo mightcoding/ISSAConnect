@@ -29,12 +29,31 @@ const EventDetail = () => {
     }, []);
 
     const renderAvatar = useCallback((avatarUrl, name, initials) => (
-        <div className="avatar-wrapper">
+        <div
+            className="avatar-wrapper"
+            style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: '2px solid #e5e7eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+            }}
+        >
             {avatarUrl ? (
                 <img
                     src={avatarUrl}
                     alt={name}
-                    className="avatar-img"
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50%'
+                    }}
                     onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
@@ -42,8 +61,16 @@ const EventDetail = () => {
                 />
             ) : null}
             <div
-                className="avatar-fallback"
-                style={{ display: avatarUrl ? 'none' : 'flex' }}
+                style={{
+                    display: avatarUrl ? 'none' : 'flex',
+                    width: '100%',
+                    height: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    color: 'white',
+                    fontSize: '16px'
+                }}
             >
                 {initials}
             </div>
@@ -440,16 +467,7 @@ Connect with professionals from various industries, share experiences, and build
 
                         {/* Event Image */}
                         <div className="event-image">
-                            <img
-                                src={event.image}
-                                alt={event.title}
-                                style={{
-                                    maxHeight: '400px',
-                                    width: '100%',
-                                    objectFit: 'cover',
-                                    borderRadius: '12px'
-                                }}
-                            />
+                            <img src={event.image} alt={event.title} />
                         </div>
 
                         {/* Event Content */}
