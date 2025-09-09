@@ -440,7 +440,16 @@ Connect with professionals from various industries, share experiences, and build
 
                         {/* Event Image */}
                         <div className="event-image">
-                            <img src={event.image} alt={event.title} />
+                            <img
+                                src={event.image}
+                                alt={event.title}
+                                style={{
+                                    maxHeight: '400px',
+                                    width: '100%',
+                                    objectFit: 'cover',
+                                    borderRadius: '12px'
+                                }}
+                            />
                         </div>
 
                         {/* Event Content */}
