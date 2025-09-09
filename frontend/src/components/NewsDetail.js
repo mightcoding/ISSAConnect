@@ -577,10 +577,10 @@ Thank you for being part of our growing community!`,
                                             className="form-input"
                                         >
                                             <option value="General">General</option>
-                                            <option value="Product Launch">Product Launch</option>
+                                            <option value="School Life<">School Life</option>
                                             <option value="Security">Security</option>
                                             <option value="Analytics">Analytics</option>
-                                            <option value="Company News">Company News</option>
+                                            <option value="Breaking News">Breaking News</option>
                                             <option value="Technology">Technology</option>
                                         </select>
                                     </div>
