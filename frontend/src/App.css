@@ -6188,3 +6188,9 @@ body {
     font-size: 20px;
   }
 }
+
+.event-image img {
+  max-height: 400px;
+  width: 100%;
+  object-fit: cover;
+}
