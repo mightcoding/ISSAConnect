@@ -33,7 +33,7 @@ const Home = () => {
             name: "Imangali Baimyrza",
             role: "Founder",
             avatar: "IB",
-            photo: "/images/Imangali.png",
+            photo: "/images/Imagali.png",
             bio: "Creative designer passionate about crafting beautiful and functional user interfaces. With a background in psychology and design, Sarah focuses on user-centered design principles.",
             skills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping", "Design Systems", "Accessibility"],
             achievements: "Designed interfaces used by 50,000+ users daily",
@@ -565,6 +565,7 @@ const Home = () => {
                     </section>
 
                     {/* Team Section */}
+                    {/* Team Section */}
                     <section id="team" className="content-section">
                         <div className="section-header">
                             <div className="section-title-group">
@@ -574,33 +575,123 @@ const Home = () => {
                             </div>
                         </div>
 
-                        <div className="team-grid-simple">
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+                            gap: '40px',
+                            marginTop: '40px',
+                            justifyItems: 'center'
+                        }}>
                             {TEAM_MEMBERS.map((member) => (
-                                <div key={member.id} className="team-card-simple">
-                                    <div className="team-photo-container">
+                                <div
+                                    key={member.id}
+                                    style={{
+                                        background: 'white',
+                                        borderRadius: '24px',
+                                        padding: '40px',
+                                        textAlign: 'center',
+                                        border: '1px solid #e5e7eb',
+                                        transition: 'all 0.3s ease',
+                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                        width: '100%',
+                                        maxWidth: '400px',
+                                        cursor: 'pointer'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-6px)';
+                                        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.15)';
+                                        e.currentTarget.style.borderColor = '#3b82f6';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                                        e.currentTarget.style.borderColor = '#e5e7eb';
+                                    }}
+                                >
+                                    <div style={{
+                                        position: 'relative',
+                                        width: '150px',
+                                        height: '150px',
+                                        margin: '0 auto 24px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: '4px solid #e5e7eb',
+                                        transition: 'border-color 0.3s ease'
+                                    }}>
                                         {member.photo ? (
                                             <img
                                                 src={member.photo}
                                                 alt={member.name}
-                                                className="team-photo"
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '50%',
+                                                    transition: 'transform 0.3s ease'
+                                                }}
                                                 onError={(e) => {
-                                                    // Fallback to avatar initials if image fails to load
                                                     e.target.style.display = 'none';
                                                     e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.transform = 'scale(1.05)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.transform = 'scale(1)';
                                                 }}
                                             />
                                         ) : null}
                                         <div
-                                            className="team-avatar-placeholder"
-                                            style={{ display: member.photo ? 'none' : 'flex' }}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                display: member.photo ? 'none' : 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '48px',
+                                                fontWeight: '600',
+                                                color: 'white',
+                                                textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                                position: 'absolute',
+                                                top: '0',
+                                                left: '0',
+                                                borderRadius: '50%'
+                                            }}
                                         >
                                             {member.avatar}
                                         </div>
-                                        <div className="photo-overlay"></div>
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '0',
+                                            left: '0',
+                                            right: '0',
+                                            bottom: '0',
+                                            background: 'rgba(59, 130, 246, 0.1)',
+                                            opacity: '0',
+                                            transition: 'opacity 0.3s ease',
+                                            borderRadius: '50%'
+                                        }}></div>
                                     </div>
-                                    <div className="team-info-simple">
-                                        <h4 className="team-name-simple">{member.name}</h4>
-                                        <p className="team-role-simple">{member.role}</p>
+                                    <div>
+                                        <h4 style={{
+                                            fontSize: '24px',
+                                            fontWeight: '700',
+                                            color: '#111827',
+                                            margin: '0 0 12px 0',
+                                            lineHeight: '1.2'
+                                        }}>
+                                            {member.name}
+                                        </h4>
+                                        <p style={{
+                                            fontSize: '16px',
+                                            color: '#6b7280',
+                                            margin: '0',
+                                            lineHeight: '1.4',
+                                            fontWeight: '500'
+                                        }}>
+                                            {member.role}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
