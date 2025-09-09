@@ -22,6 +22,7 @@ const Home = () => {
             name: "Alisher Kuvanbakiyev",
             role: "Founder & Developer",
             avatar: "AK",
+            photo: "/images/Alisher.jpeg", // Add this line
             bio: "Full-stack developer with 8+ years of experience building scalable web applications. Passionate about creating intuitive user experiences and robust backend systems.",
             skills: ["React", "Node.js", "Python", "AWS", "Docker", "GraphQL"],
             achievements: "Led development of 15+ enterprise applications",
@@ -32,6 +33,7 @@ const Home = () => {
             name: "Imangali Baimyrza",
             role: "Founder",
             avatar: "IB",
+            photo: "/images/Imangali.png",
             bio: "Creative designer passionate about crafting beautiful and functional user interfaces. With a background in psychology and design, Sarah focuses on user-centered design principles.",
             skills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping", "Design Systems", "Accessibility"],
             achievements: "Designed interfaces used by 50,000+ users daily",
@@ -555,14 +557,6 @@ const Home = () => {
                                             </div>
                                         </div>
                                         <div className="card-footer">
-                                            <div className="progress-bar">
-                                                <div
-                                                    className="progress-fill"
-                                                    style={{
-                                                        width: `${((event.registered || 0) / (event.capacity || 50)) * 100}%`
-                                                    }}
-                                                ></div>
-                                            </div>
                                         </div>
                                     </div>
                                 </article>
@@ -575,10 +569,8 @@ const Home = () => {
                         <div className="section-header">
                             <div className="section-title-group">
                                 <h3 className="section-title">Meet Our Team</h3>
-                                <p className="section-subtitle">The talented individuals behind Issa Connect's success</p>
                             </div>
                             <div className="section-actions">
-                                <span className="section-count">{TEAM_MEMBERS.length} members</span>
                             </div>
                         </div>
 
@@ -586,7 +578,22 @@ const Home = () => {
                             {TEAM_MEMBERS.map((member) => (
                                 <div key={member.id} className="team-card-simple">
                                     <div className="team-photo-container">
-                                        <div className="team-avatar-placeholder">
+                                        {member.photo ? (
+                                            <img
+                                                src={member.photo}
+                                                alt={member.name}
+                                                className="team-photo"
+                                                onError={(e) => {
+                                                    // Fallback to avatar initials if image fails to load
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div
+                                            className="team-avatar-placeholder"
+                                            style={{ display: member.photo ? 'none' : 'flex' }}
+                                        >
                                             {member.avatar}
                                         </div>
                                         <div className="photo-overlay"></div>
