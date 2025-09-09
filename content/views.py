@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from authentication.models import UserProfile
 from .models import News, Event
 from .serializers import NewsSerializer, EventSerializer
+from urllib.parse import urlparse
 
 def can_create_content(user):
     """Check if user can create content"""
@@ -15,6 +16,40 @@ def can_create_content(user):
     if hasattr(user, 'profile'):
         return user.profile.can_create_content
     return False
+
+def is_valid_image_url(url):
+    """Validate if URL is a valid image URL"""
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            return False
+        
+        # Check if URL ends with common image extensions
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg']
+        path = parsed.path.lower()
+        
+        # Check if URL ends with image extension or contains image-like patterns
+        if any(path.endswith(ext) for ext in image_extensions):
+            return True
+            
+        # Check for common image hosting patterns
+        image_hosts = [
+            'imgur.com', 'i.imgur.com',
+            'gravatar.com',
+            'cloudinary.com',
+            'unsplash.com',
+            'pexels.com',
+            'pixabay.com',
+            'images.unsplash.com',
+            'cdn.pixabay.com'
+        ]
+        
+        if any(host in parsed.netloc for host in image_hosts):
+            return True
+            
+        return False
+    except:
+        return False
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -152,6 +187,7 @@ def users_list(request):
             'email': user.email,
             'is_staff': user.is_staff,
             'can_create_content': profile.can_create_content,
+            'avatar_url': profile.get_avatar_url(),
             'date_joined': user.date_joined
         })
     
@@ -181,3 +217,78 @@ def update_user_permissions(request, user_id):
     
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_user_avatar(request, user_id):
+    """Update user avatar URL"""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response(
+            {'error': 'You do not have permission to update user avatars'}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    try:
+        user = User.objects.get(id=user_id)
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        
+        avatar_url = request.data.get('avatar_url', '').strip()
+        
+        if not avatar_url:
+            return Response(
+                {'error': 'Avatar URL is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validate URL format
+        if not is_valid_image_url(avatar_url):
+            return Response(
+                {'error': 'Invalid image URL. Please provide a valid image URL'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update avatar URL
+        profile.avatar_url = avatar_url
+        profile.save()
+        
+        return Response({
+            'message': 'Avatar updated successfully',
+            'avatar_url': avatar_url,
+            'user_id': user.id,
+            'username': user.username
+        })
+    
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to update avatar: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_user_avatar(request, user_id):
+    """Delete user avatar URL"""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response(
+            {'error': 'You do not have permission to delete user avatars'}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    try:
+        user = User.objects.get(id=user_id)
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        
+        profile.avatar_url = None
+        profile.save()
+        
+        return Response({'message': 'Avatar deleted successfully'})
+    
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to delete avatar: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
