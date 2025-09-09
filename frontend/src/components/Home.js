@@ -33,7 +33,7 @@ const Home = () => {
             name: "Imangali Baimyrza",
             role: "Founder",
             avatar: "IB",
-            photo: "/images/Imagali.png",
+            photo: "/images/Imagali.jpeg",
             bio: "Creative designer passionate about crafting beautiful and functional user interfaces. With a background in psychology and design, Sarah focuses on user-centered design principles.",
             skills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping", "Design Systems", "Accessibility"],
             achievements: "Designed interfaces used by 50,000+ users daily",
@@ -565,7 +565,6 @@ const Home = () => {
                     </section>
 
                     {/* Team Section */}
-                    {/* Team Section */}
                     <section id="team" className="content-section">
                         <div className="section-header">
                             <div className="section-title-group">
@@ -577,45 +576,47 @@ const Home = () => {
 
                         <div style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                            gap: '40px',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                            gap: '24px', // Reduced from 40px to bring cards closer
                             marginTop: '40px',
-                            justifyItems: 'center'
+                            justifyItems: 'center',
+                            maxWidth: '900px', // Limit total width to keep cards closer
+                            margin: '40px auto 0'
                         }}>
                             {TEAM_MEMBERS.map((member) => (
                                 <div
                                     key={member.id}
                                     style={{
                                         background: 'white',
-                                        borderRadius: '24px',
-                                        padding: '40px',
+                                        borderRadius: '28px', // Scaled up from 24px
+                                        padding: '68px', // Scaled up from 40px (40 * 1.7)
                                         textAlign: 'center',
                                         border: '1px solid #e5e7eb',
                                         transition: 'all 0.3s ease',
-                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                        boxShadow: '0 6px 10px rgba(0, 0, 0, 0.1)', // Slightly larger shadow
                                         width: '100%',
-                                        maxWidth: '400px',
+                                        maxWidth: '480px', // Scaled up from 400px
                                         cursor: 'pointer'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-6px)';
-                                        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.15)';
+                                        e.currentTarget.style.transform = 'translateY(-8px)'; // Increased from -6px
+                                        e.currentTarget.style.boxShadow = '0 16px 40px rgba(0, 0, 0, 0.15)';
                                         e.currentTarget.style.borderColor = '#3b82f6';
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                                        e.currentTarget.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.1)';
                                         e.currentTarget.style.borderColor = '#e5e7eb';
                                     }}
                                 >
                                     <div style={{
                                         position: 'relative',
-                                        width: '150px',
-                                        height: '150px',
-                                        margin: '0 auto 24px',
+                                        width: '255px', // Scaled up from 150px (150 * 1.7)
+                                        height: '255px',
+                                        margin: '0 auto 40px', // Scaled up from 24px
                                         borderRadius: '50%',
                                         overflow: 'hidden',
-                                        border: '4px solid #e5e7eb',
+                                        border: '6px solid #e5e7eb', // Scaled up from 4px
                                         transition: 'border-color 0.3s ease'
                                     }}>
                                         {member.photo ? (
@@ -649,10 +650,10 @@ const Home = () => {
                                                 display: member.photo ? 'none' : 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                fontSize: '48px',
+                                                fontSize: '82px', // Scaled up from 48px (48 * 1.7)
                                                 fontWeight: '600',
                                                 color: 'white',
-                                                textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                                textShadow: '0 3px 6px rgba(0, 0, 0, 0.2)',
                                                 position: 'absolute',
                                                 top: '0',
                                                 left: '0',
@@ -675,16 +676,16 @@ const Home = () => {
                                     </div>
                                     <div>
                                         <h4 style={{
-                                            fontSize: '24px',
+                                            fontSize: '41px', // Scaled up from 24px (24 * 1.7)
                                             fontWeight: '700',
                                             color: '#111827',
-                                            margin: '0 0 12px 0',
+                                            margin: '0 0 20px 0', // Scaled up from 12px
                                             lineHeight: '1.2'
                                         }}>
                                             {member.name}
                                         </h4>
                                         <p style={{
-                                            fontSize: '16px',
+                                            fontSize: '27px', // Scaled up from 16px (16 * 1.7)
                                             color: '#6b7280',
                                             margin: '0',
                                             lineHeight: '1.4',
