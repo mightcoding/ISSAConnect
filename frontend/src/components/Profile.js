@@ -13,7 +13,6 @@ const Profile = () => {
     });
     const [saveLoading, setSaveLoading] = useState(false);
     const [message, setMessage] = useState('');
-    const [userAvatar, setUserAvatar] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,19 +37,6 @@ const Profile = () => {
                     first_name: response.data.first_name || '',
                     last_name: response.data.last_name || ''
                 });
-
-                // Fetch user avatar
-                if (response.data.id) {
-                    try {
-                        const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        const currentUserData = usersResponse.data.find(u => u.id === response.data.id);
-                        setUserAvatar(currentUserData?.avatar_url);
-                    } catch (avatarError) {
-                        console.log('Could not fetch avatar:', avatarError);
-                    }
-                }
 
                 setLoading(false);
 
@@ -155,9 +141,9 @@ const Profile = () => {
                             <div className="avatar-section">
                                 <div className="avatar-container">
                                     <div className="profile-avatar-large">
-                                        {userAvatar ? (
+                                        {user?.avatar_url ? (
                                             <img
-                                                src={userAvatar}
+                                                src={user.avatar_url}
                                                 alt={`${user?.first_name} ${user?.last_name}`}
                                                 style={{
                                                     width: '100%',
@@ -173,7 +159,7 @@ const Profile = () => {
                                         ) : null}
                                         <div
                                             style={{
-                                                display: userAvatar ? 'none' : 'flex',
+                                                display: user?.avatar_url ? 'none' : 'flex',
                                                 width: '100%',
                                                 height: '100%',
                                                 alignItems: 'center',
