@@ -159,14 +159,15 @@ const Home = () => {
         });
     }, []);
 
-    const renderAvatar = useCallback((avatarUrl, name, initials) => (
-        <div className="avatar-container">
+    const renderAvatar = useCallback((avatarUrl, name, initials, size = 'default') => (
+        <div className={`avatar-wrapper ${size}`}>
             {avatarUrl ? (
                 <img
                     src={avatarUrl}
                     alt={name}
-                    className="avatar-image"
+                    className="avatar-img"
                     onError={(e) => {
+                        console.warn(`Failed to load avatar for ${name}:`, avatarUrl);
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
                     }}
@@ -202,26 +203,12 @@ const Home = () => {
         }
     }, [getAuthHeaders, MOCK_NEWS, MOCK_EVENTS]);
 
-    const fetchUserAvatar = useCallback(async (userId) => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
-                headers: getAuthHeaders()
-            });
-
-            const userData = response.data.find(u => u.id === userId);
-            setUserAvatar(userData?.avatar_url || null);
-        } catch (error) {
-            console.warn('Could not fetch avatar:', error);
-            setUserAvatar(null);
-        }
-    }, [getAuthHeaders]);
-
-    const fetchUserData = useCallback(async () => {
+    const fetchUserProfile = useCallback(async () => {
         try {
             const token = localStorage.getItem('access_token');
             if (!token) {
                 navigate('/login');
-                return;
+                return null;
             }
 
             const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
@@ -234,21 +221,65 @@ const Home = () => {
             const userData = response.data;
             setUser(userData);
 
-            // Fetch user avatar if we have user ID
-            if (userData.id) {
+            // Try to get avatar directly from profile first
+            if (userData.avatar_url) {
+                setUserAvatar(userData.avatar_url);
+            } else if (userData.id) {
+                // If no direct avatar, try to fetch from users endpoint
                 await fetchUserAvatar(userData.id);
             }
 
-            // Fetch content
-            await fetchContent();
+            return userData;
         } catch (error) {
             console.error('Profile fetch error:', error);
             localStorage.clear();
             navigate('/login');
+            return null;
+        }
+    }, [navigate]);
+
+    const fetchUserAvatar = useCallback(async (userId) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                headers: getAuthHeaders()
+            });
+
+            const userData = response.data.find(u => u.id === userId);
+            if (userData?.avatar_url) {
+                setUserAvatar(userData.avatar_url);
+            }
+        } catch (error) {
+            // Don't log error for non-admin users as they might not have access
+            console.debug('Could not fetch from admin users endpoint:', error);
+
+            // Try alternative user avatar endpoint if available
+            try {
+                const avatarResponse = await axios.get(`${API_BASE_URL}/api/auth/avatar/`, {
+                    headers: getAuthHeaders()
+                });
+                if (avatarResponse.data?.avatar_url) {
+                    setUserAvatar(avatarResponse.data.avatar_url);
+                }
+            } catch (avatarError) {
+                console.debug('No avatar endpoint available:', avatarError);
+            }
+        }
+    }, [getAuthHeaders]);
+
+    const fetchUserData = useCallback(async () => {
+        setLoading(true);
+
+        try {
+            const userData = await fetchUserProfile();
+            if (userData) {
+                await fetchContent();
+            }
+        } catch (error) {
+            console.error('Error during data fetch:', error);
         } finally {
             setLoading(false);
         }
-    }, [navigate, fetchUserAvatar, fetchContent]);
+    }, [fetchUserProfile, fetchContent]);
 
     // Event handlers
     const handleLogout = useCallback(() => {
@@ -293,7 +324,7 @@ const Home = () => {
     }, [fetchUserData]);
 
     useEffect(() => {
-        // Listen for content updates
+        // Listen for content updates and scroll events
         window.addEventListener('contentUpdated', handleContentUpdate);
         window.addEventListener('scroll', handleScroll);
 
@@ -307,7 +338,7 @@ const Home = () => {
     const canCreateContent = user?.is_staff || user?.can_create_content;
     const isAdmin = user?.is_superuser || user?.is_staff;
     const userInitials = `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`;
-    const userFullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
+    const userFullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User';
 
     // Loading state
     if (loading) {
@@ -395,7 +426,7 @@ const Home = () => {
                 <div className="hero-container">
                     <div className="hero-content">
                         <h2 className="hero-title animated-title">
-                            Welcome to Issa Connect, {user?.first_name || user?.username}
+                            Welcome to Issa Connect, {user?.first_name || user?.username || 'User'}
                         </h2>
                         <p className="hero-subtitle animated-subtitle">
                             Stay connected with the latest updates, exciting events, and meet our amazing team
@@ -578,7 +609,7 @@ const Home = () => {
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                 >
                     <div className="profile-avatar">
-                        {renderAvatar(userAvatar, userFullName, userInitials)}
+                        {renderAvatar(userAvatar, userFullName, userInitials, 'small')}
                     </div>
                     <div className="profile-info">
                         <span className="profile-name">{userFullName}</span>
@@ -595,7 +626,7 @@ const Home = () => {
                     <div className="profile-menu">
                         <div className="menu-header">
                             <div className="menu-avatar">
-                                {renderAvatar(userAvatar, userFullName, userInitials)}
+                                {renderAvatar(userAvatar, userFullName, userInitials, 'small')}
                             </div>
                             <div className="menu-info">
                                 <span className="menu-name">{userFullName}</span>
@@ -624,6 +655,872 @@ const Home = () => {
                     </div>
                 )}
             </div>
+
+            <style jsx>{`
+                /* Avatar System */
+                .avatar-wrapper {
+                    position: relative;
+                    border-radius: 50%;
+                    overflow: hidden;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border: 2px solid #e5e7eb;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                    transition: all 0.2s ease;
+                }
+
+                .avatar-wrapper:hover {
+                    transform: scale(1.05);
+                    border-color: #3b82f6;
+                }
+
+                .avatar-wrapper.small {
+                    width: 36px;
+                    height: 36px;
+                }
+
+                .avatar-wrapper.default {
+                    width: 48px;
+                    height: 48px;
+                }
+
+                .avatar-wrapper.medium {
+                    width: 56px;
+                    height: 56px;
+                }
+
+                .avatar-wrapper.large {
+                    width: 64px;
+                    height: 64px;
+                }
+
+                .avatar-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                    transition: opacity 0.2s ease;
+                }
+
+                .avatar-fallback {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                    color: white;
+                    background: inherit;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                }
+
+                .avatar-wrapper.small .avatar-fallback {
+                    font-size: 12px;
+                }
+
+                .avatar-wrapper.default .avatar-fallback {
+                    font-size: 16px;
+                }
+
+                .avatar-wrapper.medium .avatar-fallback {
+                    font-size: 18px;
+                }
+
+                .avatar-wrapper.large .avatar-fallback {
+                    font-size: 20px;
+                }
+
+                /* Profile Widget Enhanced */
+                .profile-widget {
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    z-index: 1000;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                }
+
+                .profile-trigger {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 16px;
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(229, 231, 235, 0.5);
+                    border-radius: 16px;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    max-width: 280px;
+                    min-width: 200px;
+                }
+
+                .profile-trigger:hover {
+                    background: rgba(255, 255, 255, 0.98);
+                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+                    transform: translateY(-2px);
+                    border-color: rgba(59, 130, 246, 0.3);
+                }
+
+                .profile-info {
+                    flex: 1;
+                    min-width: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+
+                .profile-name {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .profile-role {
+                    font-size: 12px;
+                    color: #6b7280;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .profile-arrow {
+                    flex-shrink: 0;
+                    margin-left: 8px;
+                }
+
+                .arrow {
+                    display: inline-block;
+                    transition: transform 0.3s ease;
+                    font-size: 14px;
+                    color: #9ca3af;
+                }
+
+                .arrow.up {
+                    transform: rotate(-90deg);
+                }
+
+                .arrow.down {
+                    transform: rotate(90deg);
+                }
+
+                /* Profile Menu Enhanced */
+                .profile-menu {
+                    position: absolute;
+                    bottom: 100%;
+                    right: 0;
+                    margin-bottom: 12px;
+                    background: rgba(255, 255, 255, 0.98);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(229, 231, 235, 0.5);
+                    border-radius: 16px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+                    min-width: 240px;
+                    overflow: hidden;
+                    animation: slideUp 0.2s ease;
+                }
+
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .menu-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 20px;
+                    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+                }
+
+                .menu-info {
+                    flex: 1;
+                    min-width: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .menu-name {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #111827;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .menu-email {
+                    font-size: 13px;
+                    color: #6b7280;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .menu-divider {
+                    height: 1px;
+                    background: linear-gradient(90deg, transparent, rgba(229, 231, 235, 0.8), transparent);
+                    margin: 0 8px;
+                }
+
+                .menu-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    width: 100%;
+                    padding: 14px 20px;
+                    background: none;
+                    border: none;
+                    text-align: left;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-size: 14px;
+                    color: #374151;
+                    font-weight: 500;
+                }
+
+                .menu-item:hover {
+                    background: rgba(59, 130, 246, 0.08);
+                    color: #1f2937;
+                }
+
+                .menu-item.logout-item {
+                    color: #dc2626;
+                }
+
+                .menu-item.logout-item:hover {
+                    background: rgba(220, 38, 38, 0.08);
+                    color: #b91c1c;
+                }
+
+                .menu-icon {
+                    font-size: 16px;
+                    width: 20px;
+                    text-align: center;
+                    opacity: 0.8;
+                }
+
+                /* Responsive Design */
+                @media (max-width: 768px) {
+                    .profile-widget {
+                        bottom: 16px;
+                        right: 16px;
+                    }
+
+                    .profile-trigger {
+                        padding: 10px 14px;
+                        max-width: 220px;
+                        min-width: 180px;
+                    }
+
+                    .profile-name {
+                        font-size: 13px;
+                    }
+
+                    .profile-role {
+                        font-size: 11px;
+                    }
+
+                    .profile-menu {
+                        min-width: 200px;
+                        margin-bottom: 8px;
+                    }
+
+                    .menu-header {
+                        padding: 16px;
+                    }
+
+                    .menu-name {
+                        font-size: 15px;
+                    }
+
+                    .menu-email {
+                        font-size: 12px;
+                    }
+
+                    .menu-item {
+                        padding: 12px 16px;
+                        font-size: 13px;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .profile-widget {
+                        bottom: 12px;
+                        right: 12px;
+                    }
+
+                    .profile-trigger {
+                        padding: 8px 12px;
+                        max-width: 200px;
+                        min-width: 160px;
+                    }
+
+                    .profile-info {
+                        gap: 1px;
+                    }
+
+                    .profile-name {
+                        font-size: 12px;
+                    }
+
+                    .profile-role {
+                        font-size: 10px;
+                    }
+                }
+
+                /* Loading Animation */
+                .loading-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    gap: 16px;
+                }
+
+                .loading-spinner {
+                    width: 48px;
+                    height: 48px;
+                    border: 3px solid #f3f4f6;
+                    border-top: 3px solid #3b82f6;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                /* High DPI Display Support */
+                @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+                    .avatar-img {
+                        image-rendering: -webkit-optimize-contrast;
+                        image-rendering: crisp-edges;
+                    }
+                }
+
+                /* Dark Mode Support (if needed) */
+                @media (prefers-color-scheme: dark) {
+                    .profile-trigger {
+                        background: rgba(31, 41, 55, 0.95);
+                        border-color: rgba(75, 85, 99, 0.5);
+                    }
+
+                    .profile-trigger:hover {
+                        background: rgba(31, 41, 55, 0.98);
+                        border-color: rgba(59, 130, 246, 0.5);
+                    }
+
+                    .profile-name {
+                        color: #f9fafb;
+                    }
+
+                    .profile-role {
+                        color: #d1d5db;
+                    }
+
+                    .profile-menu {
+                        background: rgba(31, 41, 55, 0.98);
+                        border-color: rgba(75, 85, 99, 0.5);
+                    }
+
+                    .menu-header {
+                        background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+                    }
+
+                    .menu-name {
+                        color: #f9fafb;
+                    }
+
+                    .menu-email {
+                        color: #d1d5db;
+                    }
+
+                    .menu-item {
+                        color: #e5e7eb;
+                    }
+
+                    .menu-item:hover {
+                        background: rgba(59, 130, 246, 0.15);
+                        color: #f3f4f6;
+                    }
+                }
+
+                /* Accessibility Enhancements */
+                .profile-trigger:focus {
+                    outline: 2px solid #3b82f6;
+                    outline-offset: 2px;
+                }
+
+                .menu-item:focus {
+                    outline: 2px solid #3b82f6;
+                    outline-offset: -2px;
+                }
+
+                /* Animation Performance */
+                .profile-trigger,
+                .avatar-wrapper,
+                .menu-item {
+                    will-change: transform;
+                }
+
+                /* Z-index Management */
+                .profile-widget {
+                    z-index: 1000;
+                }
+
+                .profile-menu {
+                    z-index: 1001;
+                }
+
+                /* Team Section Enhancements */
+                .team-grid-simple {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 24px;
+                    margin-top: 32px;
+                }
+
+                .team-card-simple {
+                    background: white;
+                    border-radius: 16px;
+                    padding: 24px;
+                    text-align: center;
+                    border: 1px solid #e5e7eb;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                .team-card-simple:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                    border-color: #3b82f6;
+                }
+
+                .team-photo-container {
+                    position: relative;
+                    width: 80px;
+                    height: 80px;
+                    margin: 0 auto 16px;
+                    border-radius: 50%;
+                    overflow: hidden;
+                }
+
+                .team-avatar-placeholder {
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: white;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                }
+
+                .photo-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(59, 130, 246, 0.1);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+
+                .team-card-simple:hover .photo-overlay {
+                    opacity: 1;
+                }
+
+                .team-name-simple {
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #111827;
+                    margin: 0 0 8px 0;
+                    line-height: 1.3;
+                }
+
+                .team-role-simple {
+                    font-size: 14px;
+                    color: #6b7280;
+                    margin: 0;
+                    line-height: 1.4;
+                }
+
+                /* Section Headers */
+                .content-section {
+                    margin-bottom: 80px;
+                }
+
+                .section-header {
+                    display: flex;
+                    justify-content: between;
+                    align-items: flex-end;
+                    margin-bottom: 32px;
+                    gap: 24px;
+                }
+
+                .section-title-group {
+                    flex: 1;
+                }
+
+                .section-title {
+                    font-size: 32px;
+                    font-weight: 700;
+                    color: #111827;
+                    margin: 0 0 8px 0;
+                    line-height: 1.2;
+                }
+
+                .section-subtitle {
+                    font-size: 16px;
+                    color: #6b7280;
+                    margin: 0;
+                    line-height: 1.5;
+                    max-width: 600px;
+                }
+
+                .section-actions {
+                    flex-shrink: 0;
+                }
+
+                .section-count {
+                    font-size: 14px;
+                    color: #9ca3af;
+                    font-weight: 500;
+                    padding: 6px 12px;
+                    background: #f3f4f6;
+                    border-radius: 20px;
+                }
+
+                /* News Grid Enhancements */
+                .news-grid.enhanced {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                    gap: 24px;
+                    margin-top: 32px;
+                }
+
+                .news-card {
+                    background: white;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    border: 1px solid #e5e7eb;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                .news-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                    border-color: #3b82f6;
+                }
+
+                .news-card.large {
+                    grid-column: span 2;
+                }
+
+                .news-card.featured {
+                    border-color: #f59e0b;
+                    box-shadow: 0 4px 6px rgba(245, 158, 11, 0.1);
+                }
+
+                .card-image {
+                    position: relative;
+                    height: 200px;
+                    overflow: hidden;
+                }
+
+                .card-image img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    transition: transform 0.3s ease;
+                }
+
+                .news-card:hover .card-image img {
+                    transform: scale(1.05);
+                }
+
+                .card-category {
+                    position: absolute;
+                    top: 12px;
+                    left: 12px;
+                    background: rgba(59, 130, 246, 0.9);
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+
+                .featured-badge {
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    background: rgba(245, 158, 11, 0.9);
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+
+                .card-content {
+                    padding: 20px;
+                }
+
+                .card-meta {
+                    display: flex;
+                    gap: 12px;
+                    margin-bottom: 12px;
+                    font-size: 12px;
+                    color: #9ca3af;
+                }
+
+                .card-title {
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #111827;
+                    margin: 0 0 12px 0;
+                    line-height: 1.4;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+
+                .card-excerpt {
+                    font-size: 14px;
+                    color: #6b7280;
+                    line-height: 1.5;
+                    margin: 0 0 16px 0;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+
+                .card-footer {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .read-more {
+                    color: #3b82f6;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transition: color 0.2s ease;
+                }
+
+                .news-card:hover .read-more {
+                    color: #1d4ed8;
+                }
+
+                /* Events Grid */
+                .events-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                    gap: 24px;
+                    margin-top: 32px;
+                }
+
+                .event-card {
+                    background: white;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    border: 1px solid #e5e7eb;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                .event-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                    border-color: #10b981;
+                }
+
+                .event-date-badge {
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    background: rgba(16, 185, 129, 0.9);
+                    color: white;
+                    padding: 8px;
+                    border-radius: 8px;
+                    text-align: center;
+                    min-width: 50px;
+                }
+
+                .date-month {
+                    display: block;
+                    font-size: 10px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                }
+
+                .date-day {
+                    display: block;
+                    font-size: 16px;
+                    font-weight: 700;
+                    line-height: 1;
+                }
+
+                .event-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 12px;
+                }
+
+                .event-category {
+                    background: #f3f4f6;
+                    color: #374151;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+
+                .event-price {
+                    font-size: 12px;
+                    color: #10b981;
+                    font-weight: 600;
+                }
+
+                .event-info {
+                    margin: 16px 0;
+                }
+
+                .info-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 8px;
+                    font-size: 14px;
+                    color: #6b7280;
+                }
+
+                .info-icon {
+                    font-size: 16px;
+                    width: 20px;
+                    text-align: center;
+                }
+
+                .progress-bar {
+                    width: 100%;
+                    height: 4px;
+                    background: #e5e7eb;
+                    border-radius: 2px;
+                    overflow: hidden;
+                    margin-top: 16px;
+                }
+
+                .progress-fill {
+                    height: 100%;
+                    background: linear-gradient(90deg, #10b981, #059669);
+                    transition: width 0.3s ease;
+                }
+
+                /* Responsive adjustments for mobile */
+                @media (max-width: 768px) {
+                    .section-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 16px;
+                    }
+
+                    .section-title {
+                        font-size: 28px;
+                    }
+
+                    .news-card.large {
+                        grid-column: span 1;
+                    }
+
+                    .news-grid.enhanced,
+                    .events-grid,
+                    .team-grid-simple {
+                        grid-template-columns: 1fr;
+                        gap: 16px;
+                    }
+
+                    .team-photo-container {
+                        width: 60px;
+                        height: 60px;
+                    }
+
+                    .team-avatar-placeholder {
+                        font-size: 20px;
+                    }
+
+                    .team-name-simple {
+                        font-size: 16px;
+                    }
+
+                    .team-role-simple {
+                        font-size: 13px;
+                    }
+
+                    .card-content {
+                        padding: 16px;
+                    }
+
+                    .card-title {
+                        font-size: 16px;
+                    }
+
+                    .card-excerpt {
+                        font-size: 13px;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .content-section {
+                        margin-bottom: 60px;
+                    }
+
+                    .section-title {
+                        font-size: 24px;
+                    }
+
+                    .section-subtitle {
+                        font-size: 14px;
+                    }
+
+                    .card-image {
+                        height: 160px;
+                    }
+
+                    .team-card-simple {
+                        padding: 20px;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

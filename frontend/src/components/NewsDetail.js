@@ -11,8 +11,6 @@ const NewsDetail = () => {
     // State management
     const [article, setArticle] = useState(null);
     const [user, setUser] = useState(null);
-    const [userAvatar, setUserAvatar] = useState(null);
-    const [authorAvatar, setAuthorAvatar] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -52,6 +50,7 @@ Over the coming months, we'll be rolling out additional features including:
 We're excited to embark on this journey with you and look forward to transforming how teams collaborate in the digital age.`,
             author_name: "Sarah Johnson",
             author_role: "Product Manager",
+            author_avatar: null,
             image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200&h=600&fit=crop",
             category: "Product Launch",
             read_time: "5 min read",
@@ -96,6 +95,7 @@ With these enhanced security features, you can:
 Your trust is our priority, and these security enhancements demonstrate our commitment to protecting your valuable data.`,
             author_name: "Michael Chen",
             author_role: "Security Engineer",
+            author_avatar: null,
             image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200&h=600&fit=crop",
             category: "Security",
             read_time: "7 min read",
@@ -154,6 +154,7 @@ Based on these positive trends, we're projecting:
 Thank you for being part of our growing community!`,
             author_name: "Emma Davis",
             author_role: "Analytics Director",
+            author_avatar: null,
             image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop",
             category: "Analytics",
             read_time: "4 min read",
@@ -170,45 +171,6 @@ Thank you for being part of our growing community!`,
         const token = localStorage.getItem('access_token');
         return { 'Authorization': `Bearer ${token}` };
     }, []);
-
-    // Fetch author avatar when article or user changes
-    useEffect(() => {
-        const fetchAuthorAvatar = async () => {
-            if (!article?.author_name || !user) return;
-
-            try {
-                const response = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
-                    headers: getAuthHeaders()
-                });
-
-                const authorData = response.data.find(u =>
-                    `${u.first_name} ${u.last_name}` === article.author_name
-                );
-
-                setAuthorAvatar(authorData?.avatar_url || null);
-            } catch (error) {
-                console.warn('Could not fetch author avatar:', error);
-                setAuthorAvatar(null);
-            }
-        };
-
-        fetchAuthorAvatar();
-    }, [article?.author_name, user, getAuthHeaders]);
-
-    // Fetch user avatar
-    const fetchUserAvatar = useCallback(async (userId) => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
-                headers: getAuthHeaders()
-            });
-
-            const userData = response.data.find(u => u.id === userId);
-            setUserAvatar(userData?.avatar_url || null);
-        } catch (error) {
-            console.warn('Could not fetch user avatar:', error);
-            setUserAvatar(null);
-        }
-    }, [getAuthHeaders]);
 
     // Fetch article from API or fallback to mock data
     const fetchArticle = useCallback(async () => {
@@ -254,16 +216,11 @@ Thank you for being part of our growing community!`,
 
             const userData = response.data;
             setUser(userData);
-
-            // Fetch user avatar if we have user ID
-            if (userData.id) {
-                await fetchUserAvatar(userData.id);
-            }
         } catch (error) {
             console.error('Error fetching user profile:', error);
             navigate('/login');
         }
-    }, [getAuthHeaders, fetchUserAvatar, navigate]);
+    }, [getAuthHeaders, navigate]);
 
     // Main data fetching effect
     useEffect(() => {
@@ -362,13 +319,13 @@ Thank you for being part of our growing community!`,
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }, []);
 
-    const renderAvatar = useCallback((avatarUrl, name, fallbackInitials) => (
-        <div className="avatar-container">
+    const renderAvatar = useCallback((avatarUrl, name, fallbackInitials, size = 'default') => (
+        <div className={`avatar-wrapper ${size}`}>
             {avatarUrl ? (
                 <img
                     src={avatarUrl}
                     alt={name}
-                    className="avatar-image"
+                    className="avatar-img"
                     onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
@@ -376,7 +333,7 @@ Thank you for being part of our growing community!`,
                 />
             ) : null}
             <div
-                className="avatar-fallback"
+                className="avatar-initials"
                 style={{ display: avatarUrl ? 'none' : 'flex' }}
             >
                 {fallbackInitials}
@@ -522,7 +479,7 @@ Thank you for being part of our growing community!`,
                                     {article.featured && <span className="featured-badge">Featured</span>}
                                 </div>
                                 <div className="meta-right">
-                                    <span className="article-views">{article.views.toLocaleString()} views</span>
+                                    <span className="article-views">{article.views?.toLocaleString() || 0} views</span>
                                 </div>
                             </div>
 
@@ -557,19 +514,18 @@ Thank you for being part of our growing community!`,
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-icon">👀</span>
-                                    <span className="stat-text">{article.views.toLocaleString()} views</span>
+                                    <span className="stat-text">{article.views?.toLocaleString() || 0} views</span>
                                 </div>
                             </div>
 
                             {/* Author Section */}
                             <div className="article-author">
-                                <div className="author-avatar">
-                                    {renderAvatar(
-                                        authorAvatar,
-                                        article.author_name || 'Unknown Author',
-                                        getInitials(article.author_name)
-                                    )}
-                                </div>
+                                {renderAvatar(
+                                    article.author_avatar,
+                                    article.author_name || 'Unknown Author',
+                                    getInitials(article.author_name),
+                                    'medium'
+                                )}
                                 <div className="author-info">
                                     <div className="author-details">
                                         <span className="author-name">{article.author_name || 'Unknown Author'}</span>
@@ -667,13 +623,12 @@ Thank you for being part of our growing community!`,
                     className="profile-trigger"
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                 >
-                    <div className="profile-avatar">
-                        {renderAvatar(
-                            userAvatar,
-                            `${user?.first_name} ${user?.last_name}`,
-                            `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`
-                        )}
-                    </div>
+                    {renderAvatar(
+                        user?.avatar_url,
+                        `${user?.first_name} ${user?.last_name}`,
+                        `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`,
+                        'small'
+                    )}
                     <div className="profile-info">
                         <span className="profile-name">
                             {user?.first_name} {user?.last_name}
@@ -690,13 +645,12 @@ Thank you for being part of our growing community!`,
                 {showProfileMenu && (
                     <div className="profile-menu">
                         <div className="menu-header">
-                            <div className="menu-avatar">
-                                {renderAvatar(
-                                    userAvatar,
-                                    `${user?.first_name} ${user?.last_name}`,
-                                    `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`
-                                )}
-                            </div>
+                            {renderAvatar(
+                                user?.avatar_url,
+                                `${user?.first_name} ${user?.last_name}`,
+                                `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`,
+                                'small'
+                            )}
                             <div className="menu-info">
                                 <span className="menu-name">{user?.first_name} {user?.last_name}</span>
                                 <span className="menu-email">{user?.email}</span>
@@ -724,6 +678,323 @@ Thank you for being part of our growing community!`,
                     </div>
                 )}
             </div>
+
+            <style jsx>{`
+                /* Avatar Styles */
+
+                .article-author .avatar-wrapper {
+    transform: translateX(30px);
+}
+                .avatar-wrapper {
+                    position: relative;
+                    border-radius: 50%;
+                    overflow: hidden;
+                    background: #f3f4f6;
+                    border: 2px solid #e5e7eb;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+
+                .avatar-wrapper.small {
+                    width: 36px;
+                    height: 36px;
+                }
+
+                .avatar-wrapper.medium {
+                    width: 48px;
+                    height: 48px;
+                }
+
+                .avatar-wrapper.default {
+                    width: 56px;
+                    height: 56px;
+                }
+
+                .avatar-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                }
+
+                .avatar-initials {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                    color: #6b7280;
+                    background: #f9fafb;
+                }
+
+                .avatar-wrapper.small .avatar-initials {
+                    font-size: 14px;
+                }
+
+                .avatar-wrapper.medium .avatar-initials {
+                    font-size: 16px;
+                }
+
+                .avatar-wrapper.default .avatar-initials {
+                    font-size: 18px;
+                }
+
+                /* Article Author Section */
+                .article-author {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    padding: 24px 0;
+                    border-top: 1px solid #e5e7eb;
+                    border-bottom: 1px solid #e5e7eb;
+                    margin: 32px 0;
+                }
+
+                .author-info {
+                    flex: 1;
+                    min-width: 0;
+                }
+
+                .author-details {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .author-name {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #111827;
+                    line-height: 1.4;
+                }
+
+                .author-role {
+                    font-size: 14px;
+                    color: #6b7280;
+                    line-height: 1.4;
+                }
+
+                .author-meta {
+                    margin-top: 8px;
+                }
+
+                .publish-date {
+                    font-size: 13px;
+                    color: #9ca3af;
+                    line-height: 1.4;
+                }
+
+                /* Profile Widget Styles */
+                .profile-widget {
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    z-index: 1000;
+                }
+
+                .profile-trigger {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 16px;
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    max-width: 250px;
+                }
+
+                .profile-trigger:hover {
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    transform: translateY(-1px);
+                }
+
+                .profile-info {
+                    flex: 1;
+                    min-width: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+
+                .profile-name {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                    line-height: 1.2;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .profile-role {
+                    font-size: 12px;
+                    color: #6b7280;
+                    line-height: 1.2;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .profile-arrow {
+                    flex-shrink: 0;
+                }
+
+                .arrow {
+                    display: inline-block;
+                    transition: transform 0.2s ease;
+                    font-size: 16px;
+                    color: #9ca3af;
+                }
+
+                .arrow.up {
+                    transform: rotate(-90deg);
+                }
+
+                .arrow.down {
+                    transform: rotate(90deg);
+                }
+
+                /* Profile Menu */
+                .profile-menu {
+                    position: absolute;
+                    bottom: 100%;
+                    right: 0;
+                    margin-bottom: 8px;
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    min-width: 200px;
+                    overflow: hidden;
+                }
+
+                .menu-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 16px;
+                    background: #f9fafb;
+                }
+
+                .menu-info {
+                    flex: 1;
+                    min-width: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+
+                .menu-name {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                    line-height: 1.2;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .menu-email {
+                    font-size: 12px;
+                    color: #6b7280;
+                    line-height: 1.2;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .menu-divider {
+                    height: 1px;
+                    background: #e5e7eb;
+                }
+
+                .menu-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    width: 100%;
+                    padding: 12px 16px;
+                    background: none;
+                    border: none;
+                    text-align: left;
+                    cursor: pointer;
+                    transition: background-color 0.2s ease;
+                    font-size: 14px;
+                    color: #374151;
+                }
+
+                .menu-item:hover {
+                    background: #f9fafb;
+                }
+
+                .menu-item.logout-item {
+                    color: #dc2626;
+                }
+
+                .menu-item.logout-item:hover {
+                    background: #fef2f2;
+                }
+
+                .menu-icon {
+                    font-size: 16px;
+                    width: 20px;
+                    text-align: center;
+                }
+
+                /* Responsive adjustments */
+                @media (max-width: 768px) {
+                    .profile-widget {
+                        bottom: 16px;
+                        right: 16px;
+                    }
+
+                    .profile-trigger {
+                        padding: 10px 12px;
+                        max-width: 200px;
+                    }
+
+                    .profile-name {
+                        font-size: 13px;
+                    }
+
+                    .profile-role {
+                        font-size: 11px;
+                    }
+
+                    .article-author {
+                        gap: 12px;
+                        padding: 20px 0;
+                        margin: 24px 0;
+                    }
+
+                    .author-name {
+                        font-size: 15px;
+                    }
+
+                    .author-role {
+                        font-size: 13px;
+                    }
+
+                    .publish-date {
+                        font-size: 12px;
+                    }
+                }
+
+                /* Z-index management */
+                .profile-widget {
+                    z-index: 1000;
+                }
+
+                .profile-menu {
+                    z-index: 1001;
+                }
+            `}</style>
         </div>
     );
 };
