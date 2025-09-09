@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../config.js';
 
 const NewsDetail = () => {
+    // Route parameters and navigation
     const { id } = useParams();
     const navigate = useNavigate();
+
+    // State management
     const [article, setArticle] = useState(null);
+    const [user, setUser] = useState(null);
     const [userAvatar, setUserAvatar] = useState(null);
     const [authorAvatar, setAuthorAvatar] = useState(null);
-    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -19,59 +22,13 @@ const NewsDetail = () => {
         category: '',
         image: ''
     });
-    useEffect(() => {
-        if (article?.author_name && user) {
-            const fetchAuthorAvatar = async () => {
-                try {
-                    const token = localStorage.getItem('access_token');
-                    const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const authorData = usersResponse.data.find(u =>
-                        `${u.first_name} ${u.last_name}` === article.author_name
-                    );
-                    setAuthorAvatar(authorData?.avatar_url);
-                } catch (error) {
-                    console.log('Could not fetch author avatar:', error);
-                }
-            };
-            fetchAuthorAvatar();
-        }
-    }, [article, user]);
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const token = localStorage.getItem('access_token');
 
-                // Get user data
-                const userResponse = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                setUser(userResponse.data);
-
-                // Fetch specific article from Django API
-                try {
-                    const articleResponse = await axios.get(`${API_BASE_URL}/api/content/news/${id}/`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    const articleData = articleResponse.data;
-                    setArticle(articleData);
-                    setEditForm({
-                        title: articleData.title,
-                        content: articleData.content,
-                        category: articleData.category || 'General',
-                        image: articleData.image || ''
-                    });
-                } catch (error) {
-                    console.error('Error fetching article:', error);
-
-                    // Try to find article in the same mock data used in Home component
-                    const mockNews = [
-                        {
-                            id: 1,
-                            title: "Issa Connect Platform Launch: Revolutionizing Digital Collaboration",
-                            content: `We're thrilled to announce the official launch of Issa Connect, a cutting-edge platform designed to streamline communication and enhance productivity across organizations. Our platform integrates advanced features including real-time messaging, project management tools, and comprehensive analytics to help teams work more efficiently than ever before.
+    // Mock data - moved to top level for better organization
+    const MOCK_NEWS = [
+        {
+            id: 1,
+            title: "Issa Connect Platform Launch: Revolutionizing Digital Collaboration",
+            content: `We're thrilled to announce the official launch of Issa Connect, a cutting-edge platform designed to streamline communication and enhance productivity across organizations. Our platform integrates advanced features including real-time messaging, project management tools, and comprehensive analytics to help teams work more efficiently than ever before.
 
 ## Key Features
 
@@ -93,21 +50,21 @@ Over the coming months, we'll be rolling out additional features including:
 - Enhanced customization options
 
 We're excited to embark on this journey with you and look forward to transforming how teams collaborate in the digital age.`,
-                            author_name: "Sarah Johnson",
-                            author_role: "Product Manager",
-                            image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200&h=600&fit=crop",
-                            category: "Product Launch",
-                            read_time: "5 min read",
-                            created_at: "2024-01-20T10:00:00Z",
-                            views: 1247,
-                            tags: ["Platform", "Launch", "Collaboration", "Technology"],
-                            excerpt: "Announcing the launch of our revolutionary digital collaboration platform with advanced features for modern teams.",
-                            featured: true
-                        },
-                        {
-                            id: 2,
-                            title: "Advanced Security Features: Protecting Your Data in the Digital Age",
-                            content: `Security is at the heart of everything we do at Issa Connect. Today, we're introducing enhanced security protocols including end-to-end encryption, multi-factor authentication, and advanced threat detection systems. These features ensure that your sensitive data remains protected while maintaining seamless user experience.
+            author_name: "Sarah Johnson",
+            author_role: "Product Manager",
+            image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200&h=600&fit=crop",
+            category: "Product Launch",
+            read_time: "5 min read",
+            created_at: "2024-01-20T10:00:00Z",
+            views: 1247,
+            tags: ["Platform", "Launch", "Collaboration", "Technology"],
+            excerpt: "Announcing the launch of our revolutionary digital collaboration platform with advanced features for modern teams.",
+            featured: true
+        },
+        {
+            id: 2,
+            title: "Advanced Security Features: Protecting Your Data in the Digital Age",
+            content: `Security is at the heart of everything we do at Issa Connect. Today, we're introducing enhanced security protocols including end-to-end encryption, multi-factor authentication, and advanced threat detection systems. These features ensure that your sensitive data remains protected while maintaining seamless user experience.
 
 ## Enhanced Security Measures
 
@@ -137,21 +94,21 @@ With these enhanced security features, you can:
 - Focus on productivity without security concerns
 
 Your trust is our priority, and these security enhancements demonstrate our commitment to protecting your valuable data.`,
-                            author_name: "Michael Chen",
-                            author_role: "Security Engineer",
-                            image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200&h=600&fit=crop",
-                            category: "Security",
-                            read_time: "7 min read",
-                            created_at: "2024-01-18T14:30:00Z",
-                            views: 892,
-                            tags: ["Security", "Privacy", "Encryption", "Compliance"],
-                            excerpt: "Introducing comprehensive security enhancements to protect your valuable data and communications with enterprise-grade protection.",
-                            featured: false
-                        },
-                        {
-                            id: 3,
-                            title: "Q1 Performance Analytics: Record Growth and User Engagement",
-                            content: `We're excited to share our Q1 performance metrics, which show unprecedented growth in user engagement and platform adoption. With over 50,000 active users and a 300% increase in daily interactions, Issa Connect is rapidly becoming the preferred choice for modern organizations seeking efficient collaboration solutions.
+            author_name: "Michael Chen",
+            author_role: "Security Engineer",
+            image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200&h=600&fit=crop",
+            category: "Security",
+            read_time: "7 min read",
+            created_at: "2024-01-18T14:30:00Z",
+            views: 892,
+            tags: ["Security", "Privacy", "Encryption", "Compliance"],
+            excerpt: "Introducing comprehensive security enhancements to protect your valuable data and communications with enterprise-grade protection.",
+            featured: false
+        },
+        {
+            id: 3,
+            title: "Q1 Performance Analytics: Record Growth and User Engagement",
+            content: `We're excited to share our Q1 performance metrics, which show unprecedented growth in user engagement and platform adoption. With over 50,000 active users and a 300% increase in daily interactions, Issa Connect is rapidly becoming the preferred choice for modern organizations seeking efficient collaboration solutions.
 
 ## Key Metrics
 
@@ -195,82 +152,157 @@ Based on these positive trends, we're projecting:
 - Introduction of AI-powered features
 
 Thank you for being part of our growing community!`,
-                            author_name: "Emma Davis",
-                            author_role: "Analytics Director",
-                            image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop",
-                            category: "Analytics",
-                            read_time: "4 min read",
-                            created_at: "2024-01-15T09:15:00Z",
-                            views: 634,
-                            tags: ["Analytics", "Growth", "Performance", "Metrics"],
-                            excerpt: "Sharing our impressive Q1 metrics showing record growth and exceptional user engagement across all platforms.",
-                            featured: false
-                        }
-                    ];
+            author_name: "Emma Davis",
+            author_role: "Analytics Director",
+            image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop",
+            category: "Analytics",
+            read_time: "4 min read",
+            created_at: "2024-01-15T09:15:00Z",
+            views: 634,
+            tags: ["Analytics", "Growth", "Performance", "Metrics"],
+            excerpt: "Sharing our impressive Q1 metrics showing record growth and exceptional user engagement across all platforms.",
+            featured: false
+        }
+    ];
 
-                    // Fetch user avatar
-                    if (userResponse.data.id) {
-                        try {
-                            const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
-                                headers: { 'Authorization': `Bearer ${token}` }
-                            });
-                            const currentUserData = usersResponse.data.find(u => u.id === userResponse.data.id);
-                            setUserAvatar(currentUserData?.avatar_url);
+    // Helper function to get auth headers
+    const getAuthHeaders = useCallback(() => {
+        const token = localStorage.getItem('access_token');
+        return { 'Authorization': `Bearer ${token}` };
+    }, []);
 
-                            // Also try to find author avatar if we have author info
-                            if (article?.author_name) {
-                                const authorData = usersResponse.data.find(u =>
-                                    `${u.first_name} ${u.last_name}` === article.author_name
-                                );
-                                setAuthorAvatar(authorData?.avatar_url);
-                            }
-                        } catch (avatarError) {
-                            console.log('Could not fetch avatars:', avatarError);
-                        }
-                    }
+    // Fetch author avatar when article or user changes
+    useEffect(() => {
+        const fetchAuthorAvatar = async () => {
+            if (!article?.author_name || !user) return;
 
-                    // Find the specific article by ID
-                    const foundArticle = mockNews.find(article => article.id === parseInt(id));
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                    headers: getAuthHeaders()
+                });
 
-                    if (foundArticle) {
-                        setArticle(foundArticle);
-                        setEditForm({
-                            title: foundArticle.title,
-                            content: foundArticle.content,
-                            category: foundArticle.category,
-                            image: foundArticle.image
-                        });
-                    } else {
-                        setArticle(null);
-                    }
-                }
+                const authorData = response.data.find(u =>
+                    `${u.first_name} ${u.last_name}` === article.author_name
+                );
+
+                setAuthorAvatar(authorData?.avatar_url || null);
+            } catch (error) {
+                console.warn('Could not fetch author avatar:', error);
+                setAuthorAvatar(null);
+            }
+        };
+
+        fetchAuthorAvatar();
+    }, [article?.author_name, user, getAuthHeaders]);
+
+    // Fetch user avatar
+    const fetchUserAvatar = useCallback(async (userId) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                headers: getAuthHeaders()
+            });
+
+            const userData = response.data.find(u => u.id === userId);
+            setUserAvatar(userData?.avatar_url || null);
+        } catch (error) {
+            console.warn('Could not fetch user avatar:', error);
+            setUserAvatar(null);
+        }
+    }, [getAuthHeaders]);
+
+    // Fetch article from API or fallback to mock data
+    const fetchArticle = useCallback(async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/content/news/${id}/`, {
+                headers: getAuthHeaders()
+            });
+
+            const articleData = response.data;
+            setArticle(articleData);
+            setEditForm({
+                title: articleData.title,
+                content: articleData.content,
+                category: articleData.category || 'General',
+                image: articleData.image || ''
+            });
+        } catch (error) {
+            console.warn('API fetch failed, using mock data:', error);
+
+            // Fallback to mock data
+            const foundArticle = MOCK_NEWS.find(article => article.id === parseInt(id));
+
+            if (foundArticle) {
+                setArticle(foundArticle);
+                setEditForm({
+                    title: foundArticle.title,
+                    content: foundArticle.content,
+                    category: foundArticle.category,
+                    image: foundArticle.image
+                });
+            } else {
+                setArticle(null);
+            }
+        }
+    }, [id, getAuthHeaders]);
+
+    // Fetch user profile
+    const fetchUserProfile = useCallback(async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
+                headers: getAuthHeaders()
+            });
+
+            const userData = response.data;
+            setUser(userData);
+
+            // Fetch user avatar if we have user ID
+            if (userData.id) {
+                await fetchUserAvatar(userData.id);
+            }
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            navigate('/login');
+        }
+    }, [getAuthHeaders, fetchUserAvatar, navigate]);
+
+    // Main data fetching effect
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+
+            try {
+                await Promise.all([
+                    fetchUserProfile(),
+                    fetchArticle()
+                ]);
             } catch (error) {
                 console.error('Error fetching data:', error);
                 navigate('/home');
-            }
-
-            finally {
+            } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [id, navigate]);
+    }, [fetchUserProfile, fetchArticle, navigate]);
 
-    const handleEdit = () => {
+    // Event handlers
+    const handleEdit = useCallback(() => {
         setEditing(true);
-    };
+    }, []);
 
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
         try {
-            const token = localStorage.getItem('access_token');
-
-            const response = await axios.put(`${API_BASE_URL}/api/content/news/${id}/`, editForm, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+            const response = await axios.put(
+                `${API_BASE_URL}/api/content/news/${id}/`,
+                editForm,
+                {
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    }
                 }
-            });
+            );
 
             setArticle(response.data);
             setEditing(false);
@@ -279,34 +311,36 @@ Thank you for being part of our growing community!`,
             console.error('Error updating article:', error);
             alert('Failed to update article. Please try again.');
         }
-    };
+    }, [id, editForm, getAuthHeaders]);
 
-    const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this article?')) {
-            try {
-                const token = localStorage.getItem('access_token');
+    const handleDelete = useCallback(async () => {
+        const confirmed = window.confirm('Are you sure you want to delete this article?');
+        if (!confirmed) return;
 
-                await axios.delete(`${API_BASE_URL}/api/content/news/${id}/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+        try {
+            await axios.delete(`${API_BASE_URL}/api/content/news/${id}/`, {
+                headers: getAuthHeaders()
+            });
 
-                window.dispatchEvent(new Event('contentUpdated'));
-                navigate('/home');
-            } catch (error) {
-                console.error('Error deleting article:', error);
-                alert('Failed to delete article. Please try again.');
-            }
+            window.dispatchEvent(new Event('contentUpdated'));
+            navigate('/home');
+        } catch (error) {
+            console.error('Error deleting article:', error);
+            alert('Failed to delete article. Please try again.');
         }
-    };
+    }, [id, getAuthHeaders, navigate]);
 
-    const handleLogout = () => {
+    const handleLogout = useCallback(() => {
         localStorage.clear();
         navigate('/login');
-    };
+    }, [navigate]);
 
-    const formatPublishDate = (dateString) => {
+    const handleFormChange = useCallback((field, value) => {
+        setEditForm(prev => ({ ...prev, [field]: value }));
+    }, []);
+
+    // Utility functions
+    const formatPublishDate = useCallback((dateString) => {
         const date = new Date(dateString);
         const now = new Date();
         const diffTime = Math.abs(now - date);
@@ -321,12 +355,51 @@ Thank you for being part of our growing community!`,
             month: 'long',
             day: 'numeric'
         });
-    };
+    }, []);
 
+    const getInitials = useCallback((name) => {
+        if (!name || typeof name !== 'string') return 'AU';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    }, []);
+
+    const renderAvatar = useCallback((avatarUrl, name, fallbackInitials) => (
+        <div className="avatar-container">
+            {avatarUrl ? (
+                <img
+                    src={avatarUrl}
+                    alt={name}
+                    className="avatar-image"
+                    onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                    }}
+                />
+            ) : null}
+            <div
+                className="avatar-fallback"
+                style={{ display: avatarUrl ? 'none' : 'flex' }}
+            >
+                {fallbackInitials}
+            </div>
+        </div>
+    ), []);
+
+    const renderContentParagraph = useCallback((paragraph, index) => {
+        if (paragraph.startsWith('## ')) {
+            return <h2 key={index} className="content-heading">{paragraph.replace('## ', '')}</h2>;
+        }
+        if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
+            return <h3 key={index} className="content-subheading">{paragraph.replace(/\*\*/g, '')}</h3>;
+        }
+        return <p key={index} className="content-paragraph">{paragraph}</p>;
+    }, []);
+
+    // Permission checks
     const canEdit = user?.is_staff || user?.can_create_content;
     const canCreateContent = user?.is_staff || user?.can_create_content;
     const isAdmin = user?.is_superuser || user?.is_staff;
 
+    // Loading state
     if (loading) {
         return (
             <div className="loading-container">
@@ -336,6 +409,7 @@ Thank you for being part of our growing community!`,
         );
     }
 
+    // Article not found state
     if (!article) {
         return (
             <div className="error-container">
@@ -456,8 +530,9 @@ Thank you for being part of our growing community!`,
                                 <input
                                     type="text"
                                     value={editForm.title}
-                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                                    onChange={(e) => handleFormChange('title', e.target.value)}
                                     className="edit-title-input"
+                                    placeholder="Article title"
                                 />
                             ) : (
                                 <h1 className="article-title">{article.title}</h1>
@@ -486,42 +561,14 @@ Thank you for being part of our growing community!`,
                                 </div>
                             </div>
 
-                            {/* Enhanced Author Section */}
+                            {/* Author Section */}
                             <div className="article-author">
                                 <div className="author-avatar">
-                                    {authorAvatar ? (
-                                        <img
-                                            src={authorAvatar}
-                                            alt={article.author_name || 'Author'}
-                                            style={{
-                                                width: '100%',
-                                                height: '100%',
-                                                borderRadius: '50%',
-                                                objectFit: 'cover'
-                                            }}
-                                            onError={(e) => {
-                                                e.target.style.display = 'none';
-                                                e.target.nextSibling.style.display = 'flex';
-                                            }}
-                                        />
-                                    ) : null}
-                                    <div
-                                        style={{
-                                            display: authorAvatar ? 'none' : 'flex',
-                                            width: '100%',
-                                            height: '100%',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        {(() => {
-                                            const authorName = article.author_name || 'Unknown Author';
-                                            if (typeof authorName === 'string') {
-                                                return authorName.split(' ').map(n => n[0]).join('');
-                                            }
-                                            return 'AU';
-                                        })()}
-                                    </div>
+                                    {renderAvatar(
+                                        authorAvatar,
+                                        article.author_name || 'Unknown Author',
+                                        getInitials(article.author_name)
+                                    )}
                                 </div>
                                 <div className="author-info">
                                     <div className="author-details">
@@ -551,7 +598,7 @@ Thank you for being part of our growing community!`,
                                         <input
                                             type="url"
                                             value={editForm.image}
-                                            onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                                            onChange={(e) => handleFormChange('image', e.target.value)}
                                             className="form-input"
                                             placeholder="https://example.com/image.jpg"
                                         />
@@ -570,7 +617,7 @@ Thank you for being part of our growing community!`,
                                         <label className="form-label">Category</label>
                                         <select
                                             value={editForm.category}
-                                            onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                            onChange={(e) => handleFormChange('category', e.target.value)}
                                             className="form-input"
                                         >
                                             <option value="General">General</option>
@@ -585,23 +632,16 @@ Thank you for being part of our growing community!`,
                                         <label className="form-label">Content</label>
                                         <textarea
                                             value={editForm.content}
-                                            onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                                            onChange={(e) => handleFormChange('content', e.target.value)}
                                             className="edit-content-textarea"
                                             rows="20"
+                                            placeholder="Article content..."
                                         />
                                     </div>
                                 </div>
                             ) : (
                                 <div className="content-body">
-                                    {article.content.split('\n\n').map((paragraph, index) => {
-                                        if (paragraph.startsWith('## ')) {
-                                            return <h2 key={index} className="content-heading">{paragraph.replace('## ', '')}</h2>;
-                                        } else if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                                            return <h3 key={index} className="content-subheading">{paragraph.replace(/\*\*/g, '')}</h3>;
-                                        } else {
-                                            return <p key={index} className="content-paragraph">{paragraph}</p>;
-                                        }
-                                    })}
+                                    {article.content.split('\n\n').map(renderContentParagraph)}
                                 </div>
                             )}
                         </div>
@@ -628,33 +668,11 @@ Thank you for being part of our growing community!`,
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                 >
                     <div className="profile-avatar">
-                        {userAvatar ? (
-                            <img
-                                src={userAvatar}
-                                alt={`${user?.first_name} ${user?.last_name}`}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: '50%',
-                                    objectFit: 'cover'
-                                }}
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                }}
-                            />
-                        ) : null}
-                        <div
-                            style={{
-                                display: userAvatar ? 'none' : 'flex',
-                                width: '100%',
-                                height: '100%',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
-                        </div>
+                        {renderAvatar(
+                            userAvatar,
+                            `${user?.first_name} ${user?.last_name}`,
+                            `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`
+                        )}
                     </div>
                     <div className="profile-info">
                         <span className="profile-name">
@@ -673,33 +691,11 @@ Thank you for being part of our growing community!`,
                     <div className="profile-menu">
                         <div className="menu-header">
                             <div className="menu-avatar">
-                                {userAvatar ? (
-                                    <img
-                                        src={userAvatar}
-                                        alt={`${user?.first_name} ${user?.last_name}`}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            borderRadius: '50%',
-                                            objectFit: 'cover'
-                                        }}
-                                        onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.nextSibling.style.display = 'flex';
-                                        }}
-                                    />
-                                ) : null}
-                                <div
-                                    style={{
-                                        display: userAvatar ? 'none' : 'flex',
-                                        width: '100%',
-                                        height: '100%',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                >
-                                    {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
-                                </div>
+                                {renderAvatar(
+                                    userAvatar,
+                                    `${user?.first_name} ${user?.last_name}`,
+                                    `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`
+                                )}
                             </div>
                             <div className="menu-info">
                                 <span className="menu-name">{user?.first_name} {user?.last_name}</span>

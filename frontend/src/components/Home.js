@@ -1,26 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API_BASE_URL from '../config.js';
 import axios from 'axios';
+import API_BASE_URL from '../config.js';
 
 const Home = () => {
-    const [userAvatar, setUserAvatar] = useState(null);
+    // State management
     const [user, setUser] = useState(null);
+    const [userAvatar, setUserAvatar] = useState(null);
     const [loading, setLoading] = useState(true);
     const [news, setNews] = useState([]);
     const [events, setEvents] = useState([]);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [activeSection, setActiveSection] = useState('news');
+
     const navigate = useNavigate();
 
-    // Updated team data - only 2 members with more detailed info
-    const teamMembers = [
+    // Constants
+    const TEAM_MEMBERS = useMemo(() => [
         {
             id: 1,
             name: "Alisher Kuvanbakiyev",
             role: "Founder & Developer",
-            avatar: "AR",
-            bio: "Full-stack developer with 8+ years of experience building scalable web applications. Passionate about creating intuitive user experiences and robust backend systems. When not coding, Alex enjoys hiking and exploring new technologies.",
+            avatar: "AK",
+            bio: "Full-stack developer with 8+ years of experience building scalable web applications. Passionate about creating intuitive user experiences and robust backend systems.",
             skills: ["React", "Node.js", "Python", "AWS", "Docker", "GraphQL"],
             achievements: "Led development of 15+ enterprise applications",
             contact: "alex@issaconnect.com"
@@ -29,218 +31,232 @@ const Home = () => {
             id: 2,
             name: "Imangali Baimyrza",
             role: "Founder",
-            avatar: "SC",
-            bio: "Creative designer passionate about crafting beautiful and functional user interfaces. With a background in psychology and design, Sarah focuses on user-centered design principles that make technology accessible to everyone.",
+            avatar: "IB",
+            bio: "Creative designer passionate about crafting beautiful and functional user interfaces. With a background in psychology and design, Sarah focuses on user-centered design principles.",
             skills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping", "Design Systems", "Accessibility"],
             achievements: "Designed interfaces used by 50,000+ users daily",
             contact: "sarah@issaconnect.com"
         }
-    ];
+    ], []);
 
-    // Function to fetch content that can be called from other components
-    const fetchContent = async () => {
+    const MOCK_NEWS = useMemo(() => [
+        {
+            id: 1,
+            title: "Issa Connect Platform Launch: Revolutionizing Digital Collaboration",
+            content: "We're thrilled to announce the official launch of Issa Connect, a cutting-edge platform designed to streamline communication and enhance productivity across organizations.",
+            excerpt: "Announcing the launch of our revolutionary digital collaboration platform with advanced features for modern teams.",
+            author: "Sarah Johnson",
+            author_role: "Product Manager",
+            image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop",
+            category: "Product Launch",
+            read_time: "5 min read",
+            created_at: "2024-01-20T10:00:00Z",
+            views: 1247,
+            featured: true
+        },
+        {
+            id: 2,
+            title: "Advanced Security Features: Protecting Your Data",
+            content: "Security is at the heart of everything we do at Issa Connect. Today, we're introducing enhanced security protocols including end-to-end encryption.",
+            excerpt: "Introducing comprehensive security enhancements to protect your valuable data and communications with enterprise-grade protection.",
+            author: "Michael Chen",
+            author_role: "Security Engineer",
+            image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=400&fit=crop",
+            category: "Security",
+            read_time: "7 min read",
+            created_at: "2024-01-18T14:30:00Z",
+            views: 892,
+            featured: false
+        },
+        {
+            id: 3,
+            title: "Q1 Performance Analytics: Record Growth",
+            content: "We're excited to share our Q1 performance metrics, which show unprecedented growth in user engagement and platform adoption.",
+            excerpt: "Sharing our impressive Q1 metrics showing record growth and exceptional user engagement across all platforms.",
+            author: "Emma Davis",
+            author_role: "Analytics Director",
+            image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop",
+            category: "Analytics",
+            read_time: "4 min read",
+            created_at: "2024-01-15T09:15:00Z",
+            views: 634,
+            featured: false
+        }
+    ], []);
+
+    const MOCK_EVENTS = useMemo(() => [
+        {
+            id: 1,
+            title: "Issa Connect Annual Conference 2024: The Future of Digital Workplace",
+            description: "Join us for our flagship annual conference featuring keynote speakers from leading tech companies, interactive workshops, and networking opportunities.",
+            excerpt: "Our flagship conference featuring industry leaders and innovative workshops on digital collaboration.",
+            date: "2024-03-15T09:00:00Z",
+            end_date: "2024-03-17T18:00:00Z",
+            location: "Convention Center, San Francisco",
+            venue_details: "Moscone Center, 747 Howard St, San Francisco, CA 94103",
+            image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop",
+            category: "Conference",
+            capacity: 500,
+            registered: 324,
+            author_name: "Event Team",
+            ticket_price: "Free",
+            agenda: "Day 1: Keynotes & Workshops, Day 2: Panel Discussions, Day 3: Networking & Awards"
+        },
+        {
+            id: 2,
+            title: "Advanced Features Training Workshop",
+            description: "Deep dive into Issa Connect's advanced features with our expert trainers. This hands-on workshop covers automation tools and integrations.",
+            excerpt: "Hands-on training workshop covering advanced platform features and productivity techniques.",
+            date: "2024-02-28T14:00:00Z",
+            end_date: "2024-02-28T17:00:00Z",
+            location: "Virtual Event",
+            venue_details: "Online via Issa Connect Platform",
+            image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop",
+            category: "Training",
+            capacity: 100,
+            registered: 67,
+            author_name: "Training Team",
+            ticket_price: "Free for Premium users",
+            agenda: "Session 1: Automation Setup, Session 2: Integration Techniques, Session 3: Custom Workflows"
+        },
+        {
+            id: 3,
+            title: "Community Meetup: Building Better Digital Experiences",
+            description: "Connect with fellow Issa Connect users in your area! Share experiences, exchange tips, and collaborate on innovative solutions.",
+            excerpt: "Local community meetup for users to share experiences and network with fellow professionals.",
+            date: "2024-02-10T18:00:00Z",
+            end_date: "2024-02-10T21:00:00Z",
+            location: "Tech Hub Downtown",
+            venue_details: "Innovation District, 123 Tech Street, Austin, TX 78701",
+            image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&h=400&fit=crop",
+            category: "Meetup",
+            capacity: 50,
+            registered: 23,
+            author_name: "Community Team",
+            ticket_price: "Free",
+            agenda: "6:00 PM: Welcome & Networking, 7:00 PM: User Presentations, 8:00 PM: Q&A & Social"
+        }
+    ], []);
+
+    // Helper functions
+    const getAuthHeaders = useCallback(() => {
+        const token = localStorage.getItem('access_token');
+        return { 'Authorization': `Bearer ${token}` };
+    }, []);
+
+    const formatDate = useCallback((dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }, []);
+
+    const formatTime = useCallback((dateString) => {
+        return new Date(dateString).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }, []);
+
+    const renderAvatar = useCallback((avatarUrl, name, initials) => (
+        <div className="avatar-container">
+            {avatarUrl ? (
+                <img
+                    src={avatarUrl}
+                    alt={name}
+                    className="avatar-image"
+                    onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                    }}
+                />
+            ) : null}
+            <div
+                className="avatar-fallback"
+                style={{ display: avatarUrl ? 'none' : 'flex' }}
+            >
+                {initials}
+            </div>
+        </div>
+    ), []);
+
+    // Data fetching functions
+    const fetchContent = useCallback(async () => {
         try {
-            const token = localStorage.getItem('access_token');
-
-            // Fetch real data from Django API
             const [newsResponse, eventsResponse] = await Promise.all([
                 axios.get(`${API_BASE_URL}/api/content/news/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getAuthHeaders()
                 }),
                 axios.get(`${API_BASE_URL}/api/content/events/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getAuthHeaders()
                 })
             ]);
 
             setNews(newsResponse.data);
             setEvents(eventsResponse.data);
-
         } catch (error) {
-            console.error('Error fetching content:', error);
-            // Fallback to mock data if API fails
-            setNews([
-                {
-                    id: 1,
-                    title: "Issa Connect Platform Launch: Revolutionizing Digital Collaboration",
-                    content: "We're thrilled to announce the official launch of Issa Connect, a cutting-edge platform designed to streamline communication and enhance productivity across organizations.",
-                    excerpt: "Announcing the launch of our revolutionary digital collaboration platform with advanced features for modern teams.",
-                    author: "Sarah Johnson",
-                    author_role: "Product Manager",
-                    image: "https://images.unsplash.com/photo-1560472354-b43ff0c44a43?w=800&h=400&fit=crop",
-                    category: "Product Launch",
-                    read_time: "5 min read",
-                    created_at: "2024-01-20T10:00:00Z",
-                    views: 1247,
-                    featured: true
-                },
-                {
-                    id: 2,
-                    title: "Advanced Security Features: Protecting Your Data",
-                    content: "Security is at the heart of everything we do at Issa Connect. Today, we're introducing enhanced security protocols including end-to-end encryption.",
-                    excerpt: "Introducing comprehensive security enhancements to protect your valuable data and communications with enterprise-grade protection.",
-                    author: "Michael Chen",
-                    author_role: "Security Engineer",
-                    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=400&fit=crop",
-                    category: "Security",
-                    read_time: "7 min read",
-                    created_at: "2024-01-18T14:30:00Z",
-                    views: 892,
-                    featured: false
-                },
-                {
-                    id: 3,
-                    title: "Q1 Performance Analytics: Record Growth",
-                    content: "We're excited to share our Q1 performance metrics, which show unprecedented growth in user engagement and platform adoption.",
-                    excerpt: "Sharing our impressive Q1 metrics showing record growth and exceptional user engagement across all platforms.",
-                    author: "Emma Davis",
-                    author_role: "Analytics Director",
-                    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop",
-                    category: "Analytics",
-                    read_time: "4 min read",
-                    created_at: "2024-01-15T09:15:00Z",
-                    views: 634,
-                    featured: false
-                }
-            ]);
-
-            setEvents([
-                {
-                    id: 1,
-                    title: "Issa Connect Annual Conference 2024: The Future of Digital Workplace",
-                    description: "Join us for our flagship annual conference featuring keynote speakers from leading tech companies, interactive workshops, and networking opportunities.",
-                    excerpt: "Our flagship conference featuring industry leaders and innovative workshops on digital collaboration.",
-                    date: "2024-03-15T09:00:00Z",
-                    end_date: "2024-03-17T18:00:00Z",
-                    location: "Convention Center, San Francisco",
-                    venue_details: "Moscone Center, 747 Howard St, San Francisco, CA 94103",
-                    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop",
-                    category: "Conference",
-                    capacity: 500,
-                    registered: 324,
-                    author_name: "Event Team",
-                    ticket_price: "Free",
-                    agenda: "Day 1: Keynotes & Workshops, Day 2: Panel Discussions, Day 3: Networking & Awards"
-                },
-                {
-                    id: 2,
-                    title: "Advanced Features Training Workshop",
-                    description: "Deep dive into Issa Connect's advanced features with our expert trainers. This hands-on workshop covers automation tools and integrations.",
-                    excerpt: "Hands-on training workshop covering advanced platform features and productivity techniques.",
-                    date: "2024-02-28T14:00:00Z",
-                    end_date: "2024-02-28T17:00:00Z",
-                    location: "Virtual Event",
-                    venue_details: "Online via Issa Connect Platform",
-                    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop",
-                    category: "Training",
-                    capacity: 100,
-                    registered: 67,
-                    author_name: "Training Team",
-                    ticket_price: "Free for Premium users",
-                    agenda: "Session 1: Automation Setup, Session 2: Integration Techniques, Session 3: Custom Workflows"
-                },
-                {
-                    id: 3,
-                    title: "Community Meetup: Building Better Digital Experiences",
-                    description: "Connect with fellow Issa Connect users in your area! Share experiences, exchange tips, and collaborate on innovative solutions.",
-                    excerpt: "Local community meetup for users to share experiences and network with fellow professionals.",
-                    date: "2024-02-10T18:00:00Z",
-                    end_date: "2024-02-10T21:00:00Z",
-                    location: "Tech Hub Downtown",
-                    venue_details: "Innovation District, 123 Tech Street, Austin, TX 78701",
-                    image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&h=400&fit=crop",
-                    category: "Meetup",
-                    capacity: 50,
-                    registered: 23,
-                    author_name: "Community Team",
-                    ticket_price: "Free",
-                    agenda: "6:00 PM: Welcome & Networking, 7:00 PM: User Presentations, 8:00 PM: Q&A & Social"
-                }
-            ]);
+            console.warn('API fetch failed, using mock data:', error);
+            setNews(MOCK_NEWS);
+            setEvents(MOCK_EVENTS);
         }
-    };
+    }, [getAuthHeaders, MOCK_NEWS, MOCK_EVENTS]);
 
-    useEffect(() => {
-        console.log('Home.js using API_BASE_URL:', API_BASE_URL);
+    const fetchUserAvatar = useCallback(async (userId) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
+                headers: getAuthHeaders()
+            });
 
-        const fetchUserData = async () => {
-            try {
-                const token = localStorage.getItem('access_token');
-                if (!token) {
-                    navigate('/login');
-                    return;
-                }
-                const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                setUser(response.data);
+            const userData = response.data.find(u => u.id === userId);
+            setUserAvatar(userData?.avatar_url || null);
+        } catch (error) {
+            console.warn('Could not fetch avatar:', error);
+            setUserAvatar(null);
+        }
+    }, [getAuthHeaders]);
 
-                // Fetch user avatar from profile
-                if (response.data.id) {
-                    try {
-                        const usersResponse = await axios.get(`${API_BASE_URL}/api/content/admin/users/`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        const currentUserData = usersResponse.data.find(u => u.id === response.data.id);
-                        setUserAvatar(currentUserData?.avatar_url);
-                    } catch (avatarError) {
-                        console.log('Could not fetch avatar:', avatarError);
-                    }
-                }
-
-                await fetchContent();
-            } catch (error) {
-                console.error('Home.js profile fetch error:', error);
-                console.error('Error response:', error.response);
-                localStorage.clear();
+    const fetchUserData = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
                 navigate('/login');
-            } finally {
-                setLoading(false);
+                return;
             }
-        };
 
-        fetchUserData();
-
-        // Listen for content updates
-        const handleContentUpdate = () => {
-            fetchContent();
-        };
-
-        window.addEventListener('contentUpdated', handleContentUpdate);
-
-        // Handle scroll for active section detection
-        const handleScroll = () => {
-            const sections = ['news', 'events', 'team'];
-            const scrollPosition = window.scrollY + 200;
-
-            for (const section of sections) {
-                const element = document.getElementById(section);
-                if (element) {
-                    const { offsetTop, offsetHeight } = element;
-                    if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-                        setActiveSection(section);
-                        break;
-                    }
+            const response = await axios.get(`${API_BASE_URL}/api/auth/profile/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
+            });
+
+            const userData = response.data;
+            setUser(userData);
+
+            // Fetch user avatar if we have user ID
+            if (userData.id) {
+                await fetchUserAvatar(userData.id);
             }
-        };
 
-        window.addEventListener('scroll', handleScroll);
+            // Fetch content
+            await fetchContent();
+        } catch (error) {
+            console.error('Profile fetch error:', error);
+            localStorage.clear();
+            navigate('/login');
+        } finally {
+            setLoading(false);
+        }
+    }, [navigate, fetchUserAvatar, fetchContent]);
 
-        return () => {
-            window.removeEventListener('contentUpdated', handleContentUpdate);
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, [navigate]);
-
-    const handleLogout = () => {
+    // Event handlers
+    const handleLogout = useCallback(() => {
         localStorage.clear();
         navigate('/login');
-    };
+    }, [navigate]);
 
-    const scrollToSection = (sectionId) => {
+    const scrollToSection = useCallback((sectionId) => {
         const element = document.getElementById(sectionId);
         if (element) {
             element.scrollIntoView({
@@ -248,26 +264,52 @@ const Home = () => {
                 block: 'start'
             });
         }
-    };
+    }, []);
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
+    const handleScroll = useCallback(() => {
+        const sections = ['news', 'events', 'team'];
+        const scrollPosition = window.scrollY + 200;
 
-    const formatTime = (dateString) => {
-        return new Date(dateString).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+        for (const section of sections) {
+            const element = document.getElementById(section);
+            if (element) {
+                const { offsetTop, offsetHeight } = element;
+                if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+                    setActiveSection(section);
+                    break;
+                }
+            }
+        }
+    }, []);
 
+    const handleContentUpdate = useCallback(() => {
+        fetchContent();
+    }, [fetchContent]);
+
+    // Effects
+    useEffect(() => {
+        console.log('Home.js using API_BASE_URL:', API_BASE_URL);
+        fetchUserData();
+    }, [fetchUserData]);
+
+    useEffect(() => {
+        // Listen for content updates
+        window.addEventListener('contentUpdated', handleContentUpdate);
+        window.addEventListener('scroll', handleScroll);
+
+        return () => {
+            window.removeEventListener('contentUpdated', handleContentUpdate);
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [handleContentUpdate, handleScroll]);
+
+    // Computed values
     const canCreateContent = user?.is_staff || user?.can_create_content;
     const isAdmin = user?.is_superuser || user?.is_staff;
+    const userInitials = `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`;
+    const userFullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
 
+    // Loading state
     if (loading) {
         return (
             <div className="loading-container">
@@ -342,7 +384,7 @@ const Home = () => {
                 </div>
             </nav>
 
-            {/* Enhanced Hero Section with Animations */}
+            {/* Enhanced Hero Section */}
             <section className="hero-section enhanced-hero">
                 <div className="hero-background">
                     <div className="floating-shape shape-1"></div>
@@ -386,7 +428,7 @@ const Home = () => {
             {/* Main Content */}
             <main className="main-content">
                 <div className="content-container">
-                    {/* Enhanced News Section */}
+                    {/* News Section */}
                     <section id="news" className="content-section">
                         <div className="section-header">
                             <div className="section-title-group">
@@ -419,8 +461,7 @@ const Home = () => {
                                         <h4 className="card-title">{article.title}</h4>
                                         <p className="card-excerpt">{article.excerpt}</p>
                                         <div className="card-footer">
-                                            <div className="author-info">
-                                            </div>
+                                            <div className="author-info"></div>
                                             <div className="read-more">
                                                 <span>Read More →</span>
                                             </div>
@@ -453,7 +494,9 @@ const Home = () => {
                                     <div className="card-image">
                                         <img src={event.image} alt={event.title} />
                                         <div className="event-date-badge">
-                                            <span className="date-month">{new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}</span>
+                                            <span className="date-month">
+                                                {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                                            </span>
                                             <span className="date-day">{new Date(event.date).getDate()}</span>
                                         </div>
                                     </div>
@@ -484,7 +527,9 @@ const Home = () => {
                                             <div className="progress-bar">
                                                 <div
                                                     className="progress-fill"
-                                                    style={{ width: `${((event.registered || 0) / (event.capacity || 50)) * 100}%` }}
+                                                    style={{
+                                                        width: `${((event.registered || 0) / (event.capacity || 50)) * 100}%`
+                                                    }}
                                                 ></div>
                                             </div>
                                         </div>
@@ -494,7 +539,7 @@ const Home = () => {
                         </div>
                     </section>
 
-                    {/* Simple Team Section - 2 Photo-focused Cards */}
+                    {/* Team Section */}
                     <section id="team" className="content-section">
                         <div className="section-header">
                             <div className="section-title-group">
@@ -502,19 +547,17 @@ const Home = () => {
                                 <p className="section-subtitle">The talented individuals behind Issa Connect's success</p>
                             </div>
                             <div className="section-actions">
-                                <span className="section-count">{teamMembers.length} members</span>
+                                <span className="section-count">{TEAM_MEMBERS.length} members</span>
                             </div>
                         </div>
 
                         <div className="team-grid-simple">
-                            {teamMembers.map((member) => (
+                            {TEAM_MEMBERS.map((member) => (
                                 <div key={member.id} className="team-card-simple">
                                     <div className="team-photo-container">
-                                        <img
-                                            src={member.image}
-                                            alt={member.name}
-                                            className="team-photo"
-                                        />
+                                        <div className="team-avatar-placeholder">
+                                            {member.avatar}
+                                        </div>
                                         <div className="photo-overlay"></div>
                                     </div>
                                     <div className="team-info-simple">
@@ -528,46 +571,17 @@ const Home = () => {
                 </div>
             </main>
 
-            {/* Enhanced Profile Widget */}
+            {/* Profile Widget */}
             <div className="profile-widget">
                 <div
                     className="profile-trigger"
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                 >
                     <div className="profile-avatar">
-                        {userAvatar ? (
-                            <img
-                                src={userAvatar}
-                                alt={`${user?.first_name} ${user?.last_name}`}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: '50%',
-                                    objectFit: 'cover'
-                                }}
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                }}
-                            />
-                        ) : null}
-                        <div
-                            className="profile-initials"
-                            style={{
-                                display: userAvatar ? 'none' : 'flex',
-                                width: '100%',
-                                height: '100%',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
-                        </div>
+                        {renderAvatar(userAvatar, userFullName, userInitials)}
                     </div>
                     <div className="profile-info">
-                        <span className="profile-name">
-                            {user?.first_name} {user?.last_name}
-                        </span>
+                        <span className="profile-name">{userFullName}</span>
                         <span className="profile-role">
                             {isAdmin ? 'Administrator' : canCreateContent ? 'Content Creator' : 'Member'}
                         </span>
@@ -581,36 +595,10 @@ const Home = () => {
                     <div className="profile-menu">
                         <div className="menu-header">
                             <div className="menu-avatar">
-                                {userAvatar ? (
-                                    <img
-                                        src={userAvatar}
-                                        alt={`${user?.first_name} ${user?.last_name}`}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            borderRadius: '50%',
-                                            objectFit: 'cover'
-                                        }}
-                                        onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.nextSibling.style.display = 'flex';
-                                        }}
-                                    />
-                                ) : null}
-                                <div
-                                    style={{
-                                        display: userAvatar ? 'none' : 'flex',
-                                        width: '100%',
-                                        height: '100%',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                >
-                                    {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
-                                </div>
+                                {renderAvatar(userAvatar, userFullName, userInitials)}
                             </div>
                             <div className="menu-info">
-                                <span className="menu-name">{user?.first_name} {user?.last_name}</span>
+                                <span className="menu-name">{userFullName}</span>
                                 <span className="menu-email">{user?.email}</span>
                             </div>
                         </div>
