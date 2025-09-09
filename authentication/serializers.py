@@ -34,16 +34,21 @@ class UserLoginSerializer(serializers.Serializer):
             if not user:
                 raise serializers.ValidationError('Invalid credentials')
             attrs['user'] = user
-            return attrs
+        return attrs
 
 class UserSerializer(serializers.ModelSerializer):
     can_create_content = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()  # Add this line
     
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'date_joined', 'can_create_content')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 
+                 'is_superuser', 'date_joined', 'can_create_content', 'avatar_url')  # Add avatar_url here
     
     def get_can_create_content(self, obj):
-        # Get or create profile if it doesn't exist
         profile, created = UserProfile.objects.get_or_create(user=obj)
         return profile.can_create_content
+    
+    def get_avatar_url(self, obj):  # Add this method
+        profile, created = UserProfile.objects.get_or_create(user=obj)
+        return profile.get_avatar_url()
