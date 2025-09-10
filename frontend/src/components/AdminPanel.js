@@ -31,6 +31,7 @@ const AdminPanel = () => {
                 if (!token) {
                     navigate('/login');
                     return;
+                    z
                 }
 
                 // Get current user
@@ -1107,6 +1108,12 @@ const AdminPanel = () => {
                                                             fontSize: '12px'
                                                         }}>
                                                             {registration.user_email}
+                                                        </div>
+                                                        <div style={{
+                                                            color: '#6b7280',
+                                                            fontSize: '11px'
+                                                        }}>
+                                                            {registration.phone_number}
                                                         </div>
                                                         <div style={{
                                                             color: '#6b7280',
