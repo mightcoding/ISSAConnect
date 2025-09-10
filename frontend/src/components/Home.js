@@ -99,7 +99,10 @@ const Home = () => {
             image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop",
             category: "Conference",
             capacity: 500,
-            registered: 324,
+            current_registrations: 324,
+            is_registered: false,
+            is_full: false,
+            available_spots: 176,
             author_name: "Event Team",
             ticket_price: "Free",
             agenda: "Day 1: Keynotes & Workshops, Day 2: Panel Discussions, Day 3: Networking & Awards"
@@ -116,7 +119,10 @@ const Home = () => {
             image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop",
             category: "Training",
             capacity: 100,
-            registered: 67,
+            current_registrations: 67,
+            is_registered: false,
+            is_full: false,
+            available_spots: 33,
             author_name: "Training Team",
             ticket_price: "Free for Premium users",
             agenda: "Session 1: Automation Setup, Session 2: Integration Techniques, Session 3: Custom Workflows"
@@ -133,7 +139,10 @@ const Home = () => {
             image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&h=400&fit=crop",
             category: "Meetup",
             capacity: 50,
-            registered: 23,
+            current_registrations: 23,
+            is_registered: false,
+            is_full: false,
+            available_spots: 27,
             author_name: "Community Team",
             ticket_price: "Free",
             agenda: "6:00 PM: Welcome & Networking, 7:00 PM: User Presentations, 8:00 PM: Q&A & Social"
@@ -546,13 +555,21 @@ const Home = () => {
                                                     <span className="info-icon">📅</span>
                                                     <span>{formatDate(event.date)} at {formatTime(event.date)}</span>
                                                 </div>
+                                                <div className="progress-bar">
+                                                    <div
+                                                        className="progress-fill"
+                                                        style={{
+                                                            width: `${Math.min(100, ((event.current_registrations || 0) / event.capacity) * 100)}%`
+                                                        }}
+                                                    ></div>
+                                                </div>
                                                 <div className="info-item">
                                                     <span className="info-icon">📍</span>
                                                     <span>{event.location}</span>
                                                 </div>
                                                 <div className="info-item">
                                                     <span className="info-icon">👥</span>
-                                                    <span>Event Capacity - {event.capacity} Students</span>
+                                                    <span>{event.current_registrations || 0}/{event.capacity} registered</span>
                                                 </div>
                                             </div>
                                         </div>

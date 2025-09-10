@@ -55,3 +55,27 @@ class Event(models.Model):
         if not self.venue_details:
             self.venue_details = self.location
         super().save(*args, **kwargs)
+
+    @property
+    def current_registrations(self):
+        return self.registrations.count()
+    
+    @property
+    def is_full(self):
+        return self.current_registrations >= self.capacity
+    
+    @property
+    def available_spots(self):
+        return max(0, self.capacity - self.current_registrations)
+
+class EventRegistration(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    registered_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('event', 'user')  # Prevent duplicate registrations
+        ordering = ['-registered_at']
+        
+    def __str__(self):
+        return f"{self.user.username} - {self.event.title}"

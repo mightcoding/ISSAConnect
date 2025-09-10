@@ -12,6 +12,7 @@ const EventDetail = () => {
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [registrationLoading, setRegistrationLoading] = useState(false);
     const [editForm, setEditForm] = useState({
         title: '',
         description: '',
@@ -191,6 +192,10 @@ Connect with professionals from various industries, share experiences, and build
                 image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=600&fit=crop",
                 category: "Conference",
                 capacity: 500,
+                current_registrations: 237,
+                is_registered: false,
+                is_full: false,
+                available_spots: 263,
                 ticket_price: "Free",
                 agenda: "3-day conference with keynotes, workshops, and networking",
                 requirements: "Laptop recommended for workshops",
@@ -208,6 +213,39 @@ Connect with professionals from various industries, share experiences, and build
             });
         }
     }, [id, getAuthHeaders]);
+
+    const handleRegistration = useCallback(async () => {
+        if (!event) return;
+
+        setRegistrationLoading(true);
+
+        try {
+            const endpoint = event.is_registered ? 'unregister' : 'register';
+            const method = event.is_registered ? 'DELETE' : 'POST';
+
+            const response = await axios({
+                method: method,
+                url: `${API_BASE_URL}/api/content/events/${id}/${endpoint}/`,
+                headers: getAuthHeaders()
+            });
+
+            // Update event state with new registration data
+            setEvent(prevEvent => ({
+                ...prevEvent,
+                is_registered: !prevEvent.is_registered,
+                current_registrations: response.data.current_registrations,
+                available_spots: response.data.available_spots,
+                is_full: response.data.current_registrations >= prevEvent.capacity
+            }));
+
+        } catch (error) {
+            console.error('Registration error:', error);
+            const errorMessage = error.response?.data?.error || 'Registration failed. Please try again.';
+            alert(errorMessage);
+        } finally {
+            setRegistrationLoading(false);
+        }
+    }, [event, id, getAuthHeaders]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -408,6 +446,84 @@ Connect with professionals from various industries, share experiences, and build
                             ) : (
                                 <h1 className="event-title">{event.title}</h1>
                             )}
+
+                            {/* Registration Section */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '20px',
+                                marginTop: '20px',
+                                padding: '20px',
+                                backgroundColor: '#f8fafc',
+                                borderRadius: '12px',
+                                border: '1px solid #e2e8f0'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px'
+                                }}>
+                                    <div style={{
+                                        fontSize: '24px',
+                                        fontWeight: 'bold',
+                                        color: event.is_full ? '#dc2626' : '#059669'
+                                    }}>
+                                        {event.current_registrations || 0}/{event.capacity}
+                                    </div>
+                                    <div style={{
+                                        fontSize: '14px',
+                                        color: '#64748b'
+                                    }}>
+                                        {event.is_full ? 'Event Full' : `${event.available_spots || event.capacity} spots available`}
+                                    </div>
+                                </div>
+
+                                <div style={{ flex: 1 }}>
+                                    <div style={{
+                                        height: '8px',
+                                        backgroundColor: '#e2e8f0',
+                                        borderRadius: '4px',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div style={{
+                                            height: '100%',
+                                            backgroundColor: event.is_full ? '#dc2626' : '#059669',
+                                            width: `${Math.min(100, ((event.current_registrations || 0) / event.capacity) * 100)}%`,
+                                            transition: 'width 0.3s ease'
+                                        }}></div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleRegistration}
+                                    disabled={registrationLoading || (event.is_full && !event.is_registered)}
+                                    style={{
+                                        padding: '12px 24px',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        cursor: registrationLoading || (event.is_full && !event.is_registered) ? 'not-allowed' : 'pointer',
+                                        backgroundColor: event.is_registered
+                                            ? '#dc2626'
+                                            : event.is_full
+                                                ? '#94a3b8'
+                                                : '#059669',
+                                        color: 'white',
+                                        minWidth: '120px',
+                                        transition: 'all 0.2s ease',
+                                        opacity: registrationLoading || (event.is_full && !event.is_registered) ? 0.6 : 1
+                                    }}
+                                >
+                                    {registrationLoading
+                                        ? 'Loading...'
+                                        : event.is_registered
+                                            ? 'Unregister'
+                                            : event.is_full
+                                                ? 'Event Full'
+                                                : 'Register'}
+                                </button>
+                            </div>
 
                             <div className="event-quick-info">
                                 <div className="info-item">

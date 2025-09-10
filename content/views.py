@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from authentication.models import UserProfile
-from .models import News, Event
-from .serializers import NewsSerializer, EventSerializer
+from .models import News, Event, EventRegistration
+from .serializers import NewsSerializer, EventSerializer, EventRegistrationSerializer
 from urllib.parse import urlparse
 
 def can_create_content(user):
@@ -114,7 +114,7 @@ def news_detail(request, pk):
 def events_list(request):
     if request.method == 'GET':
         events = Event.objects.all()[:10]  # Limit to 10 items
-        serializer = EventSerializer(events, many=True)
+        serializer = EventSerializer(events, many=True, context={'request': request})
         return Response(serializer.data)
     
     elif request.method == 'POST':
@@ -136,7 +136,7 @@ def event_detail(request, pk):
     event = get_object_or_404(Event, pk=pk)
     
     if request.method == 'GET':
-        serializer = EventSerializer(event)
+        serializer = EventSerializer(event, context={'request': request})
         return Response(serializer.data)
     
     elif request.method == 'PUT':
@@ -163,6 +163,137 @@ def event_detail(request, pk):
         
         event.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+# NEW REGISTRATION ENDPOINTS
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def register_for_event(request, pk):
+    """Register current user for an event"""
+    event = get_object_or_404(Event, pk=pk)
+    
+    # Check if event is full
+    if event.is_full:
+        return Response(
+            {'error': 'Event is full'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Check if user is already registered
+    if EventRegistration.objects.filter(event=event, user=request.user).exists():
+        return Response(
+            {'error': 'You are already registered for this event'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Create registration
+    registration = EventRegistration.objects.create(event=event, user=request.user)
+    
+    return Response({
+        'message': 'Successfully registered for event',
+        'registered': True,
+        'current_registrations': event.current_registrations,
+        'available_spots': event.available_spots
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def unregister_from_event(request, pk):
+    """Unregister current user from an event"""
+    event = get_object_or_404(Event, pk=pk)
+    
+    try:
+        registration = EventRegistration.objects.get(event=event, user=request.user)
+        registration.delete()
+        
+        return Response({
+            'message': 'Successfully unregistered from event',
+            'registered': False,
+            'current_registrations': event.current_registrations,
+            'available_spots': event.available_spots
+        }, status=status.HTTP_200_OK)
+    
+    except EventRegistration.DoesNotExist:
+        return Response(
+            {'error': 'You are not registered for this event'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def event_registrations(request, pk):
+    """Get all registrations for an event (Admin only)"""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response(
+            {'error': 'You do not have permission to view event registrations'}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    event = get_object_or_404(Event, pk=pk)
+    registrations = EventRegistration.objects.filter(event=event)
+    serializer = EventRegistrationSerializer(registrations, many=True)
+    
+    return Response({
+        'event_title': event.title,
+        'capacity': event.capacity,
+        'current_registrations': event.current_registrations,
+        'registrations': serializer.data
+    })
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_event_registration(request, pk, user_id):
+    """Remove a specific user's registration from an event (Admin only)"""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response(
+            {'error': 'You do not have permission to remove event registrations'}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    event = get_object_or_404(Event, pk=pk)
+    user = get_object_or_404(User, pk=user_id)
+    
+    try:
+        registration = EventRegistration.objects.get(event=event, user=user)
+        registration.delete()
+        
+        return Response({
+            'message': f'Successfully removed {user.username} from event',
+            'current_registrations': event.current_registrations,
+            'available_spots': event.available_spots
+        }, status=status.HTTP_200_OK)
+    
+    except EventRegistration.DoesNotExist:
+        return Response(
+            {'error': 'Registration not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_events_overview(request):
+    """Get overview of all events with registration stats (Admin only)"""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response(
+            {'error': 'You do not have permission to view events overview'}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    events = Event.objects.all()
+    events_data = []
+    
+    for event in events:
+        events_data.append({
+            'id': event.id,
+            'title': event.title,
+            'date': event.date,
+            'capacity': event.capacity,
+            'current_registrations': event.current_registrations,
+            'is_full': event.is_full,
+            'registration_percentage': round((event.current_registrations / event.capacity) * 100, 1) if event.capacity > 0 else 0
+        })
+    
+    return Response(events_data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
