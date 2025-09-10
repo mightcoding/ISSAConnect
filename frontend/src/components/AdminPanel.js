@@ -31,7 +31,6 @@ const AdminPanel = () => {
                 if (!token) {
                     navigate('/login');
                     return;
-                    z
                 }
 
                 // Get current user
@@ -755,7 +754,6 @@ const AdminPanel = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px', color: '#374151' }}>{userData.email}</td>
-                                        <td style={{ padding: '20px', color: '#374151' }}>{userData.phone_number}</td>
                                         <td style={{ padding: '20px', color: '#374151' }}>
                                             {userData.phone_number || '-'}
                                         </td>
@@ -1109,12 +1107,14 @@ const AdminPanel = () => {
                                                         }}>
                                                             {registration.user_email}
                                                         </div>
-                                                        <div style={{
-                                                            color: '#6b7280',
-                                                            fontSize: '11px'
-                                                        }}>
-                                                            {registration.phone_number}
-                                                        </div>
+                                                        {registration.user_phone && (  // ADD THIS BLOCK
+                                                            <div style={{
+                                                                color: '#6b7280',
+                                                                fontSize: '12px'
+                                                            }}>
+                                                                📱 {registration.user_phone}
+                                                            </div>
+                                                        )}
                                                         <div style={{
                                                             color: '#6b7280',
                                                             fontSize: '11px'

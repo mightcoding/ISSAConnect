@@ -96,10 +96,11 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     user_email = serializers.SerializerMethodField()
     user_avatar = serializers.SerializerMethodField()
+    user_phone = serializers.SerializerMethodField()  
 
     class Meta:
         model = EventRegistration
-        fields = ['id', 'user', 'user_name', 'user_email', 'user_avatar', 'registered_at']
+        fields = ['id', 'user', 'user_name', 'user_email', 'user_avatar', 'user_phone', 'registered_at']  # ADD 'user_phone' HERE
         read_only_fields = ['registered_at']
 
     def get_user_name(self, obj):
@@ -111,4 +112,9 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
     def get_user_avatar(self, obj):
         if hasattr(obj.user, 'profile'):
             return obj.user.profile.get_avatar_url()
+        return None
+
+    def get_user_phone(self, obj):  # ADD THIS ENTIRE METHOD
+        if hasattr(obj.user, 'profile'):
+            return obj.user.profile.get_phone_number()
         return None

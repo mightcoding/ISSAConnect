@@ -317,8 +317,10 @@ def users_list(request):
             'last_name': user.last_name,
             'email': user.email,
             'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
             'can_create_content': profile.can_create_content,
             'avatar_url': profile.get_avatar_url(),
+            'phone_number': profile.get_phone_number(),  # FIXED: Added missing phone_number
             'date_joined': user.date_joined
         })
     
