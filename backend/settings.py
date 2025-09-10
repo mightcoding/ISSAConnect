@@ -21,8 +21,10 @@ ALLOWED_HOSTS = [
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
+    "https://issaconnect.com",  # Add this line
+    "https://www.issaconnect.com",  # Add this too if you use www
     "https://issa-connect-snyk.vercel.app",
-    "https://issa-connect-rje3.vercel.app",
+    "https://issa-connect-rje3.vercel.app", 
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
@@ -144,6 +146,8 @@ SIMPLE_JWT = {
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
+    'https://issaconnect.com',  # Add this line
+    'https://www.issaconnect.com',  # Add this too if you use www
     'https://issaconnect-production.up.railway.app',
     'https://*.vercel.app',
     'https://*.railway.app',
