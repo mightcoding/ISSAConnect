@@ -437,7 +437,7 @@ const Home = () => {
                 <div className="hero-container">
                     <div className="hero-content">
                         <h2 className="hero-title animated-title">
-                            Welcome to Issa Connect, {user?.first_name || user?.username || 'User'}
+                            Welcome to ISSA Connect, {user?.first_name || user?.username || 'User'}
                         </h2>
                         <p className="hero-subtitle animated-subtitle">
                             Stay connected with the latest updates, exciting events, and meet our amazing team
