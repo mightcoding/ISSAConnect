@@ -754,6 +754,7 @@ const AdminPanel = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px', color: '#374151' }}>{userData.email}</td>
+                                        <td style={{ padding: '20px', color: '#374151' }}>{userData.phone_number}</td>
                                         <td style={{ padding: '20px', color: '#374151' }}>
                                             {userData.phone_number || '-'}
                                         </td>
