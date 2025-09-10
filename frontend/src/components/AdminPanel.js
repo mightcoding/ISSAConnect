@@ -77,6 +77,7 @@ const AdminPanel = () => {
                             first_name: 'John',
                             last_name: 'Doe',
                             email: 'john@example.com',
+                            phone_number: '+1 (555) 123-4567', // Add this
                             is_staff: false,
                             can_create_content: false,
                             avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
@@ -88,6 +89,7 @@ const AdminPanel = () => {
                             first_name: 'Jane',
                             last_name: 'Smith',
                             email: 'jane@example.com',
+                            phone_number: '+1 (555) 987-6543', // Add this
                             is_staff: false,
                             can_create_content: true,
                             avatar_url: null,
@@ -648,7 +650,7 @@ const AdminPanel = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ background: '#f8fafc' }}>
-                                    {['User', 'Email', 'Role', 'Content Permission', 'Joined', 'Actions'].map(header => (
+                                    {['User', 'Email', 'Phone', 'Role', 'Content Permission', 'Joined', 'Actions'].map(header => (
                                         <th key={header} style={{
                                             padding: '20px',
                                             textAlign: 'left',
@@ -752,6 +754,9 @@ const AdminPanel = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px', color: '#374151' }}>{userData.email}</td>
+                                        <td style={{ padding: '20px', color: '#374151' }}>
+                                            {userData.phone_number || '-'}
+                                        </td>
                                         <td style={{ padding: '20px' }}>
                                             <span style={{
                                                 background: userData.is_staff
