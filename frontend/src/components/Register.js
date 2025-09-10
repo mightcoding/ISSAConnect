@@ -9,6 +9,7 @@ const Register = () => {
         email: '',
         first_name: '',
         last_name: '',
+        phone_number: '',
         password: '',
         password_confirm: ''
     });
@@ -51,6 +52,7 @@ const Register = () => {
             const errorMsg = error.response?.data?.password?.[0] ||
                 error.response?.data?.username?.[0] ||
                 error.response?.data?.email?.[0] ||
+                error.response?.data?.phone_number?.[0] ||
                 error.response?.data?.non_field_errors?.[0] ||
                 'Registration failed';
             setError(errorMsg);
@@ -112,6 +114,18 @@ const Register = () => {
                         value={formData.last_name}
                         onChange={handleChange}
                         required
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label className="form-label">Phone Number</label>
+                    <input
+                        type="tel"
+                        name="phone_number"
+                        className="form-input"
+                        value={formData.phone_number}
+                        onChange={handleChange}
+                        placeholder="+1 (555) 123-4567"
                     />
                 </div>
 
